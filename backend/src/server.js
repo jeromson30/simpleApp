@@ -34,14 +34,14 @@ app.post('/api/data', (req, res) => {
 });
 
 app.get('/api/bf6/player-stats', async (req, res) => {
-  const { player, platform = 'pc' } = req.query;
-  if (!player) {
+  const { player, pplatform } = req.query;
+  if (!player && !pplatform) {
     return res.status(400).json({ error: 'Missing player parameter' });
   }
 
   try {
   
-    const url = 'https://api.gametools.network/bf6/stats/?categories=multiplayer&raw=false&format_values=true&name='+player+'&skip_battlelog=true';
+    const url = 'https://api.gametools.network/bf6/stats/?categories=multiplayer&raw=false&format_values=true&name='+player+'&platform='+pplatform+'&skip_battlelog=true';
 ;
     const gtRes = await fetch(url);
     if (!gtRes.ok) {
@@ -62,7 +62,7 @@ app.get('/api/bf6/player-stats', async (req, res) => {
       playtimeHours: gtData.timePlayed,
       avatar: gtData.avatar,
     };
-    //console.log(cleaned);
+    console.log(cleaned);
     res.json(cleaned);
   } catch (e) {
     console.error(e);

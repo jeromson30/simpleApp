@@ -1,1 +1,76 @@
+# ===== DEPENDENCIES =====
 node_modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===== BUILD FILES =====
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# ===== ENVIRONMENT VARIABLES =====
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# ===== IDE & EDITOR =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.sublime-project
+.sublime-workspace
+*.code-workspace
+.eslintcache
+
+# ===== OS =====
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===== LOGS =====
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== TEMPORARY FILES =====
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+.turbo/
+
+# ===== TESTING =====
+.nyc_output/
+coverage/
+*.lcov
+
+# ===== YARN =====
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ===== PNPM =====
+.pnpm-store/
+
+# ===== MISC =====
+.prettierignore
+todo.txt
+notes.md

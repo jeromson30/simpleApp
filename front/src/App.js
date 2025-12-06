@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+Ôªøimport React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import { Menu, X } from 'lucide-react';
 
 function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nom, setNom] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // States pour BF6
   const [bfStats, setBfStats] = useState([]);
@@ -18,7 +20,7 @@ function App() {
     fetchBfStats();
   }, []);
 
-  // Canvas animation (complet)
+  // Canvas animation moderne avec particules fines et halos
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -31,18 +33,20 @@ function App() {
     resize();
     window.addEventListener('resize', resize);
 
-    const particleCount = 100;
-    const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ff8b94', '#c7ceea'];
-
+    const particles = [];
+    const orbs = [];
+    const particleCount = 150;
+    
     class Particle {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * 2;
-        this.vy = (Math.random() - 0.5) * 2;
-        this.radius = Math.random() * 4 + 2;
-        this.color = colors[Math.floor(Math.random() * colors.length)];
-        this.alpha = Math.random() * 0.5 + 0.3;
+        this.vx = (Math.random() - 0.5) * 0.8;
+        this.vy = (Math.random() - 0.5) * 0.8;
+        this.radius = Math.random() * 1.5 + 0.5;
+        this.opacity = Math.random() * 0.6 + 0.2;
+        this.maxOpacity = this.opacity;
+        this.pulseSpeed = Math.random() * 0.02 + 0.005;
       }
 
       update() {
@@ -54,12 +58,17 @@ function App() {
 
         this.x = Math.max(0, Math.min(canvas.width, this.x));
         this.y = Math.max(0, Math.min(canvas.height, this.y));
+
+        this.opacity += this.pulseSpeed;
+        if (this.opacity > this.maxOpacity || this.opacity < this.maxOpacity * 0.3) {
+          this.pulseSpeed *= -1;
+        }
       }
 
       draw(ctx) {
         ctx.save();
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = '#64c8ff';
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -67,31 +76,75 @@ function App() {
       }
     }
 
-    const particles = [];
+    class Orb {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.radius = Math.random() * 80 + 40;
+        this.opacity = Math.random() * 0.15 + 0.05;
+        this.color = Math.random() > 0.5 ? '#64c8ff' : '#a855f7';
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < -this.radius || this.x > canvas.width + this.radius) this.vx *= -1;
+        if (this.y < -this.radius || this.y > canvas.height + this.radius) this.vy *= -1;
+      }
+
+      draw(ctx) {
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        gradient.addColorStop(0, `rgba(${this.color === '#64c8ff' ? '100, 200, 255' : '168, 85, 247'}, ${this.opacity})`);
+        gradient.addColorStop(1, `rgba(${this.color === '#64c8ff' ? '100, 200, 255' : '168, 85, 247'}, 0)`);
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle());
     }
+    for (let i = 0; i < 4; i++) {
+      orbs.push(new Orb());
+    }
 
-    const maxDistance = 150;
+    const maxDistance = 100;
+    let time = 0;
 
     const render = () => {
-      ctx.fillStyle = '#1a1a2e';
+      const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      bgGradient.addColorStop(0, '#0f0f1e');
+      bgGradient.addColorStop(0.5, '#1a1a2e');
+      bgGradient.addColorStop(1, '#16213e');
+      ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      orbs.forEach(orb => {
+        orb.update();
+        orb.draw(ctx);
+      });
 
       particles.forEach(p => {
         p.update();
         p.draw(ctx);
       });
 
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 0.5;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
+
           if (distance < maxDistance) {
             const alpha = (1 - distance / maxDistance) * 0.2;
-            ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+            ctx.strokeStyle = `rgba(100, 200, 255, ${alpha})`;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -99,6 +152,15 @@ function App() {
           }
         }
       }
+
+      time += 0.001;
+//      const scanY = (Math.sin(time) * canvas.height * 0.5) + canvas.height * 0.5;
+//      const scanGradient = ctx.createLinearGradient(0, scanY - 50, 0, scanY + 50);
+//      scanGradient.addColorStop(0, 'rgba(100, 200, 255, 0)');
+//      scanGradient.addColorStop(0.5, 'rgba(100, 200, 255, 0.03)');
+//      scanGradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+//      ctx.fillStyle = scanGradient;
+//      ctx.fillRect(0, scanY - 50, canvas.width, 100);
 
       animationRef.current = requestAnimationFrame(render);
     };
@@ -123,14 +185,17 @@ function App() {
     }
   };
 
-  // ADAPT… pour ton backend /api/bf6/player-stats
   const fetchBfStats = async () => {
     try {
-      const players = ['jeromson','trivett13']; // Ajoute d'autres pseudos ici
+      const data = ['jeromson','pc','trivett13','pc','cursus666','pc','crntn_13','ps5'];
+      
+      const players = data.reduce((acc, val, i) => 
+        i % 2 === 0 ? [...acc, { pseudo: val, plateforme: data[i + 1] }] : acc, []
+      );
       
       const responses = await Promise.all(
-        players.map(async (playerName) => {
-          const res = await fetch(`/api/bf6/player-stats?player=${encodeURIComponent(playerName)}&platform=pc`);
+        players.map(async (player) => {
+          const res = await fetch(`/api/bf6/player-stats?player=${encodeURIComponent(player.pseudo)}&pplatform=${player.plateforme}`);
           if (!res.ok) return null;
           return await res.json();
         })
@@ -153,7 +218,7 @@ function App() {
         body: JSON.stringify({ nom })
       });
       const result = await response.json();
-      alert('DonnÈes envoyÈes: ' + result.received.nom);
+      alert('Donn√©es envoy√©es: ' + result.received.nom);
       setNom('');
     } catch (error) {
       console.error('Erreur:', error);
@@ -164,40 +229,104 @@ function App() {
     <div className="App">
       <canvas ref={canvasRef} className="pixi-background" />
 
-      <header className="App-header">
-        <h1>Mon Application</h1>
-        {/* Stats BF6 adaptÈes ‡ ton backend */}
-        <div>
-          <h2>Stats Battlefield 6</h2>
-          {loadingBf ? (
-            <p>Chargement des stats...</p>
-          ) : bfStats.length === 0 ? (
-            <p>Aucune stat disponible.</p>
-          ) : (
-            bfStats.map((player, index) => (
-              <div key={index} style={{ 
-                backgroundColor: 'rgba(58, 63, 71, 0.8)', 
-                padding: '1.5rem', 
-                borderRadius: '5px', 
-                margin: '1rem 0',
-                backdropFilter: 'blur(10px)'
-              }}>
-                <h3 style={{ marginTop: 0, textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
-                  {player.name} [{player.platform}]
-                </h3>
-                
-                <ul style={{ listStyle: 'none', padding: 0 }}>
-                
-                  <li><strong>Meilleure classe:</strong> {player.bestClass || 'N/A'}</li>
-                  <li><strong>Victoire:</strong> {player.win || 'N/A'}</li>
-                  <li><strong>K/D:</strong> {player.kd || 'N/A'}</li>
-                  <li><strong>Heures de jeu:</strong> {player.playtimeHours || 'N/A'}</li>
-                </ul>
-              </div>
-            ))
-          )}
+      {/* Navbar */}
+      <nav className="navbar">
+        <div className="navbar-container">
+          <h1 className="navbar-title">Mon Application</h1>
+          
+          {/* Menu desktop */}
+          <div className="desktop-menu">
+            <a href="#">Accueil</a>
+            <a href="#">Stats</a>
+            <a href="#">Contact</a>
+          </div>
+
+          {/* Menu mobile */}
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="mobile-menu-btn"
+          >
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
-      </header>
+      </nav>
+
+      {/* Menu mobile d√©roulant */}
+      {menuOpen && (
+        <div className="mobile-menu">
+          <a href="#">Accueil</a>
+          <a href="#">Stats</a>
+          <a href="#">Contact</a>
+        </div>
+      )}
+
+      {/* Banner */}
+      <div className="banner">
+        <div className="banner-container">
+          <h2 className="banner-title">Bienvenue</h2>
+          <p className="banner-subtitle">D√©couvrez vos statistiques Battlefield 6</p>
+        </div>
+      </div>
+
+      {/* Stats BF6 Bandeau */}
+      {!loadingBf && bfStats.length > 0 && (
+        <div className="stats-banner">
+          <div className="stats-container">
+            {bfStats.map((player, index) => (
+              <div key={index} className="stat-card">
+                <h4>{player.name}</h4>
+                <div className="stat-content">
+                  <p><strong>K/D:</strong> {player.kd || 'N/A'}</p>
+                  <p><strong>Victoires:</strong> {player.win || 'N/A'}</p>
+                  <p><strong>Heures:</strong> {player.playtimeHours || 'N/A'}h</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="main-content">
+        <h3>Contenu Principal</h3>
+        
+        {/* Form */}
+        <div className="form-container">
+          <form onSubmit={handleSubmit} className="form">
+            <input 
+              type="text"
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+              placeholder="Entrez votre nom"
+            />
+            <button type="submit">Envoyer</button>
+          </form>
+        </div>
+
+        {/* Data Display */}
+        {loading ? (
+          <p className="loading">Chargement des donn√©es...</p>
+        ) : (
+          <div className="data-grid">
+            {data.length > 0 ? (
+              data.map((item, index) => (
+                <div key={index} className="data-card">
+                  <p>{JSON.stringify(item)}</p>
+                </div>
+              ))
+            ) : (
+              <p className="no-data">Aucune donn√©e</p>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="footer">
+        <div className="footer-container">
+          <p>&copy; 2025 Mon Application. Tous droits r√©serv√©s.</p>
+        </div>
+      </footer>
     </div>
   );
 }
