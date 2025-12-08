@@ -1,17 +1,20 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Header } from './components/Header';
+import { ContactContent } from './components/ContactContent';
+import { HomeContent } from './components/HomeContent';
+import { StatsContent } from './components/StatsContent';
+import { CRM } from './pages/crm';
 import './App.css';
-import { Menu, X } from 'lucide-react';
 
-function App() {
+// Composant principal
+function AppContent() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nom, setNom] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  
-  // States pour BF6
   const [bfStats, setBfStats] = useState([]);
   const [loadingBf, setLoadingBf] = useState(true);
-  
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
 
@@ -20,7 +23,6 @@ function App() {
     fetchBfStats();
   }, []);
 
-  // Canvas animation moderne avec particules fines et halos
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -115,7 +117,7 @@ function App() {
     }
 
     const maxDistance = 100;
-    let time = 0;
+    var time = 0;
 
     const render = () => {
       const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -154,14 +156,6 @@ function App() {
       }
 
       time += 0.001;
-//      const scanY = (Math.sin(time) * canvas.height * 0.5) + canvas.height * 0.5;
-//      const scanGradient = ctx.createLinearGradient(0, scanY - 50, 0, scanY + 50);
-//      scanGradient.addColorStop(0, 'rgba(100, 200, 255, 0)');
-//      scanGradient.addColorStop(0.5, 'rgba(100, 200, 255, 0.03)');
-//      scanGradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
-//      ctx.fillStyle = scanGradient;
-//      ctx.fillRect(0, scanY - 50, canvas.width, 100);
-
       animationRef.current = requestAnimationFrame(render);
     };
 
@@ -224,104 +218,39 @@ function App() {
       console.error('Erreur:', error);
     }
   };
+  
+  // Mettre à jour le titre de la page web
+  const location = useLocation();
+  
+  useEffect(() => {
+    document.title = `Jeromson - ${location.pathname} - `;
+  }, []);
 
   return (
     <div className="App">
       <canvas ref={canvasRef} className="pixi-background" />
 
-      {/* Navbar */}
-      <nav className="navbar">
-        <div className="navbar-container">
-          <h1 className="navbar-title">Mon Application</h1>
-          
-          {/* Menu desktop */}
-          <div className="desktop-menu">
-            <a href="#">Accueil</a>
-            <a href="#">Stats</a>
-            <a href="#">Contact</a>
-          </div>
+      <Header menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
-          {/* Menu mobile */}
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="mobile-menu-btn"
-          >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </nav>
+      <Routes>
+        <Route 
+          path="/" 
+          element={<HomeContent data={data} loading={loading} nom={nom} setNom={setNom} handleSubmit={handleSubmit} />} 
+        />
+        <Route 
+          path="/stats" 
+          element={<StatsContent bfStats={bfStats} loadingBf={loadingBf} />} 
+        />
+        <Route 
+          path="/contact" 
+          element={<ContactContent />} 
+        />
+        <Route 
+          path="/crm" 
+          element={<CRM />} 
+        />
+      </Routes>
 
-      {/* Menu mobile déroulant */}
-      {menuOpen && (
-        <div className="mobile-menu">
-          <a href="#">Accueil</a>
-          <a href="#">Stats</a>
-          <a href="#">Contact</a>
-        </div>
-      )}
-
-      {/* Banner */}
-      <div className="banner">
-        <div className="banner-container">
-          <h2 className="banner-title">Bienvenue</h2>
-          <p className="banner-subtitle">Découvrez vos statistiques Battlefield 6</p>
-        </div>
-      </div>
-
-      {/* Stats BF6 Bandeau */}
-      {!loadingBf && bfStats.length > 0 && (
-        <div className="stats-banner">
-          <div className="stats-container">
-            {bfStats.map((player, index) => (
-              <div key={index} className="stat-card">
-                <h4>{player.name}</h4>
-                <div className="stat-content">
-                  <p><strong>K/D:</strong> {player.kd || 'N/A'}</p>
-                  <p><strong>Victoires:</strong> {player.win || 'N/A'}</p>
-                  <p><strong>Heures:</strong> {player.playtimeHours || 'N/A'}h</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="main-content">
-        <h3>Contenu Principal</h3>
-        
-        {/* Form */}
-        <div className="form-container">
-          <form onSubmit={handleSubmit} className="form">
-            <input 
-              type="text"
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              placeholder="Entrez votre nom"
-            />
-            <button type="submit">Envoyer</button>
-          </form>
-        </div>
-
-        {/* Data Display */}
-        {loading ? (
-          <p className="loading">Chargement des données...</p>
-        ) : (
-          <div className="data-grid">
-            {data.length > 0 ? (
-              data.map((item, index) => (
-                <div key={index} className="data-card">
-                  <p>{JSON.stringify(item)}</p>
-                </div>
-              ))
-            ) : (
-              <p className="no-data">Aucune donnée</p>
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
       <footer className="footer">
         <div className="footer-container">
           <p>&copy; 2025 Mon Application. Tous droits réservés.</p>
@@ -331,4 +260,11 @@ function App() {
   );
 }
 
-export default App;
+// Composant App avec Router
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}
