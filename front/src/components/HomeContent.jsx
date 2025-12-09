@@ -104,8 +104,14 @@ export function HomeContent({ data, loading, nom, setNom, handleSubmit }) {
             <a href="/crm" className="crm-carousel-cta">Accéder au CRM →</a>
           </div>
 
+          {/* ===== OPTION 2: GRADIENT MODERN (RECOMMANDÉE) ===== */}
           <div className="crm-carousel-controls">
-            <button className="carousel-btn carousel-btn-prev" onClick={prevSlide} aria-label="Slide précédent">
+            <button 
+              className="carousel-btn-option2" 
+              onClick={prevSlide} 
+              aria-label="Slide précédent"
+              title="Slide précédent"
+            >
               <ChevronLeft size={24} />
             </button>
             
@@ -116,11 +122,17 @@ export function HomeContent({ data, loading, nom, setNom, handleSubmit }) {
                   className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
                   onClick={() => setCurrentSlide(index)}
                   aria-label={`Aller au slide ${index + 1}`}
+                  title={`Slide ${index + 1}`}
                 />
               ))}
             </div>
 
-            <button className="carousel-btn carousel-btn-next" onClick={nextSlide} aria-label="Slide suivant">
+            <button 
+              className="carousel-btn-option2" 
+              onClick={nextSlide} 
+              aria-label="Slide suivant"
+              title="Slide suivant"
+            >
               <ChevronRight size={24} />
             </button>
           </div>
@@ -129,6 +141,58 @@ export function HomeContent({ data, loading, nom, setNom, handleSubmit }) {
             {currentSlide + 1} / {crmFeatures.length}
           </div>
         </div>
+
+        {/* 
+        ===== OPTIONNEL: AUTRES OPTIONS À ESSAYER =====
+        
+        OPTION 1 - MINIMALISTE (Décommentez pour tester):
+        <div className="crm-carousel-controls">
+          <button className="carousel-btn-option1" onClick={prevSlide} aria-label="Slide précédent">
+            <ChevronLeft size={24} />
+          </button>
+          <div className="carousel-indicators">
+            {crmFeatures.map((_, index) => (
+              <button key={index} className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
+                onClick={() => setCurrentSlide(index)} />
+            ))}
+          </div>
+          <button className="carousel-btn-option1" onClick={nextSlide} aria-label="Slide suivant">
+            <ChevronRight size={24} />
+          </button>
+        </div>
+
+        OPTION 3 - GLASS MORPHISM (Décommentez pour tester):
+        <div className="crm-carousel-controls">
+          <button className="carousel-btn-option3" onClick={prevSlide} aria-label="Slide précédent">
+            <ChevronLeft size={24} />
+          </button>
+          <div className="carousel-indicators">
+            {crmFeatures.map((_, index) => (
+              <button key={index} className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
+                onClick={() => setCurrentSlide(index)} />
+            ))}
+          </div>
+          <button className="carousel-btn-option3" onClick={nextSlide} aria-label="Slide suivant">
+            <ChevronRight size={24} />
+          </button>
+        </div>
+
+        OPTION 4 - NEON GLOW (Décommentez pour tester):
+        <div className="crm-carousel-controls">
+          <button className="carousel-btn-option4" onClick={prevSlide} aria-label="Slide précédent">
+            <ChevronLeft size={24} />
+          </button>
+          <div className="carousel-indicators">
+            {crmFeatures.map((_, index) => (
+              <button key={index} className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
+                onClick={() => setCurrentSlide(index)} />
+            ))}
+          </div>
+          <button className="carousel-btn-option4" onClick={nextSlide} aria-label="Slide suivant">
+            <ChevronRight size={24} />
+          </button>
+        </div>
+        */}
       </div>
 
       {/* ===== SECTION ACTUALITÉS ===== */}
@@ -153,7 +217,7 @@ export function HomeContent({ data, loading, nom, setNom, handleSubmit }) {
         </div>
       </div>
 
-      {/* ===== SECTION NEWSLETTER (anciennement formulaire) ===== */}
+      {/* ===== SECTION NEWSLETTER ===== */}
       <div style={{ marginTop: '4rem', textAlign: 'center' }}>
         <h3>Restez Informé</h3>
         <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginBottom: '2rem' }}>Abonnez-vous à notre newsletter pour recevoir les dernières actualités</p>

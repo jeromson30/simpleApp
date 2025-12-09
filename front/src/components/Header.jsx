@@ -57,14 +57,14 @@ export function Header({ menuOpen, setMenuOpen }) {
         </div>
       )}
 
-
+      {location.pathname === '/stats' ? (
+        <div className="banner">
+          <div className="banner-container">
+            <h2 className="banner-title">{title}</h2>
+            <p className="banner-subtitle">Découvrez vos statistiques Battlefield 6</p>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
-//
-//      <div className="banner">
-//        <div className="banner-container">
-//          <h2 className="banner-title">{title}</h2>
-//          <p className="banner-subtitle">Découvrez vos statistiques Battlefield 6</p>
-//        </div>
-//      </div>
