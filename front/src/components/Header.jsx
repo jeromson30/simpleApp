@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Lock } from 'lucide-react';
 
 // Composant Header avec titre dynamique
 export function Header({ menuOpen, setMenuOpen }) {
@@ -13,6 +13,8 @@ export function Header({ menuOpen, setMenuOpen }) {
         return 'Statistiques';
       case '/contact':
         return 'Contact';
+      case '/crm':
+        return 'CRM';
       default:
         return 'Mon Application';
     }
@@ -30,6 +32,9 @@ export function Header({ menuOpen, setMenuOpen }) {
             <a href="/">Accueil</a>
             <a href="/stats">Stats</a>
             <a href="/contact">Contact</a>
+            <a href="/crm" className="nav-crm-btn" title="Accès CRM">
+              <Lock size={18} />
+            </a>
           </div>
 
           <button 
@@ -46,15 +51,20 @@ export function Header({ menuOpen, setMenuOpen }) {
           <a href="/">Accueil</a>
           <a href="/stats">Stats</a>
           <a href="/contact">Contact</a>
+          <a href="/crm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Lock size={18} /> CRM
+          </a>
         </div>
       )}
 
-      <div className="banner">
-        <div className="banner-container">
-          <h2 className="banner-title">{title}</h2>
-          <p className="banner-subtitle">Découvrez vos statistiques Battlefield 6</p>
-        </div>
-      </div>
+
     </>
   );
 }
+//
+//      <div className="banner">
+//        <div className="banner-container">
+//          <h2 className="banner-title">{title}</h2>
+//          <p className="banner-subtitle">Découvrez vos statistiques Battlefield 6</p>
+//        </div>
+//      </div>
