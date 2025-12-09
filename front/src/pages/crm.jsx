@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Search, LogOut, Download, MessageSquare, TrendingUp } from 'lucide-react';
-import '../App.css'; // ✅ AJOUTER CET IMPORT
+import { Plus, Trash2, Edit2, Search, Download } from 'lucide-react';
+import '../App.css';
 
-// ... [code Supabase inchangé] ...
-
-export function CRM() {
+export function CRM({ onLogin, onLogout }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -49,6 +47,9 @@ export function CRM() {
       };
       
       setCurrentUser(user);
+      if (onLogin) {
+        onLogin(user);
+      }
       setEmail('');
       setPassword('');
     } catch (error) {
@@ -62,6 +63,11 @@ export function CRM() {
     setCurrentUser(null);
     setContacts([]);
     setInteractions([]);
+    setEmail('');
+    setPassword('');
+    if (onLogout) {
+      onLogout();
+    }
   };
 
   const loadContacts = async () => {
@@ -100,6 +106,7 @@ export function CRM() {
       } else {
         const newContact = {
           ...formData,
+          id: Math.random().toString(36).substr(2, 9),
           user_id: currentUser.id,
           created_at: new Date().toISOString()
         };
@@ -161,6 +168,7 @@ export function CRM() {
     setLoading(true);
     try {
       const newInteraction = {
+        id: Math.random().toString(36).substr(2, 9),
         user_id: currentUser.id,
         contact_id: selectedContact.id,
         text: interactionText,
@@ -253,8 +261,8 @@ export function CRM() {
       <div className="crm-login-container">
         <div className="crm-login-box">
           <div className="crm-login-card">
-            <h1>CRM Pro</h1>
-            <p>Avec Supabase 🚀</p>
+            <h1>Prism CRM</h1>
+            <p>Gestion complète de vos contacts 💎</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <input
@@ -291,102 +299,60 @@ export function CRM() {
 
   return (
     <div className="crm-container">
-      {/* Header */}
-      <div className="crm-header">
-        <div className="crm-header-content">
-          <div>
-            <h1>CRM Pro</h1>
-            <p className="crm-header-user">Connecté: {currentUser.email}</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="crm-logout-btn"
-          >
-            <LogOut size={20} /> Déconnexion
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
       <div className="crm-main">
+        
+        {/* STATS GRID */}
         <div className="crm-stats-grid">
           <div className="crm-stat-card">
-            <p className="crm-stat-label">Total</p>
-            <p className="crm-stat-value">{stats.total}</p>
+            <h3>Total Contacts</h3>
+            <p className="crm-stat-number">{stats.total}</p>
           </div>
-          <div className="crm-stat-card blue">
-            <p className="crm-stat-label">Prospects</p>
-            <p className="crm-stat-value">{stats.prospects}</p>
+          <div className="crm-stat-card">
+            <h3>Prospects</h3>
+            <p className="crm-stat-number">{stats.prospects}</p>
           </div>
-          <div className="crm-stat-card green">
-            <p className="crm-stat-label">Clients</p>
-            <p className="crm-stat-value">{stats.clients}</p>
+          <div className="crm-stat-card">
+            <h3>Clients</h3>
+            <p className="crm-stat-number">{stats.clients}</p>
           </div>
-          <div className="crm-stat-card red">
-            <p className="crm-stat-label">Perdus</p>
-            <p className="crm-stat-value">{stats.lost}</p>
+          <div className="crm-stat-card">
+            <h3>Perdus</h3>
+            <p className="crm-stat-number">{stats.lost}</p>
           </div>
-          <div className="crm-stat-card purple">
-            <p className="crm-stat-label">Conversion</p>
-            <p className="crm-stat-value">{stats.conversionRate}%</p>
+          <div className="crm-stat-card">
+            <h3>Conversion</h3>
+            <p className="crm-stat-number">{stats.conversionRate}%</p>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="crm-tabs">
+        {/* TABS */}
+        <div className="crm-tabs-wrapper">
           <button
             onClick={() => setActiveTab('contacts')}
             className={`crm-tab-button ${activeTab === 'contacts' ? 'active' : ''}`}
+            title="Liste des contacts"
           >
             📋 Contacts
           </button>
           <button
             onClick={() => setActiveTab('pipeline')}
             className={`crm-tab-button ${activeTab === 'pipeline' ? 'active' : ''}`}
+            title="Pipeline kanban"
           >
-            <TrendingUp size={20} style={{ display: 'inline', marginRight: '0.5rem' }} /> Pipeline
+            🎯 Pipeline
           </button>
           <button
             onClick={() => setActiveTab('interactions')}
             className={`crm-tab-button ${activeTab === 'interactions' ? 'active' : ''}`}
+            title="Suivi des interactions"
           >
-            <MessageSquare size={20} style={{ display: 'inline', marginRight: '0.5rem' }} /> Interactions
+            💬 Interactions
           </button>
         </div>
 
-        {/* CONTACTS TAB */}
+        {/* ===== CONTACTS TAB ===== */}
         {activeTab === 'contacts' && (
           <>
-            <div className="crm-controls">
-              <div className="crm-search-wrapper">
-                <Search size={20} className="crm-search-icon" />
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="crm-search-input"
-                />
-              </div>
-              <button
-                onClick={() => {
-                  setShowForm(!showForm);
-                  setEditingId(null);
-                  setFormData({ name: '', email: '', phone: '', company: '', status: 'prospect', notes: '' });
-                }}
-                className="crm-button-add"
-                disabled={loading}
-              >
-                <Plus size={20} /> Ajouter
-              </button>
-              <button
-                onClick={exportToPDF}
-                className="crm-button-export"
-              >
-                <Download size={20} /> Export
-              </button>
-            </div>
-
             {showForm && (
               <div className="crm-form-container">
                 <h2 className="crm-form-title">{editingId ? 'Modifier' : 'Ajouter'} un contact</h2>
@@ -484,72 +450,155 @@ export function CRM() {
                 <p className="crm-empty-message">Aucun contact trouvé</p>
               )}
             </div>
-          </>
-        )}
 
-        {/* PIPELINE TAB */}
-        {activeTab === 'pipeline' && renderPipeline()}
-
-        {/* INTERACTIONS TAB */}
-        {activeTab === 'interactions' && (
-          <div className="crm-interactions-grid">
-            <div>
-              <div className="crm-interactions-main">
-                <h3 className="crm-interactions-title">
-                  {selectedContact ? `Interactions - ${selectedContact.name}` : 'Sélectionnez un contact'}
-                </h3>
+            {/* TOOLBAR CONTACTS - EN DERNIER */}
+            <div className="crm-toolbar">
+              <div className="crm-toolbar-content">
                 
-                {selectedContact && (
-                  <>
-                    <textarea
-                      placeholder="Ajouter une interaction (appel, email, réunion...)"
-                      value={interactionText}
-                      onChange={(e) => setInteractionText(e.target.value)}
-                      className="crm-interactions-textarea"
+                {/* RECHERCHE */}
+                <div className="crm-search-container">
+                  <div className="crm-search-wrapper">
+                    <input
+                      type="text"
+                      placeholder="Rechercher un contact..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="crm-search-input"
                     />
-                    <button
-                      onClick={addInteraction}
-                      disabled={loading}
-                      className="crm-interactions-button"
-                    >
-                      {loading ? 'Ajout...' : 'Ajouter interaction'}
-                    </button>
+                    <Search size={18} className="crm-search-icon" />
+                  </div>
+                </div>
 
-                    <div className="crm-interactions-list">
-                      {getContactInteractions(selectedContact.id).length > 0 ? (
-                        getContactInteractions(selectedContact.id).map(interaction => (
-                          <div key={interaction.id} className="crm-interaction-item">
-                            <p className="crm-interaction-text">{interaction.text}</p>
-                            <p className="crm-interaction-date">📅 {new Date(interaction.created_at).toLocaleString('fr-FR')}</p>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="crm-empty-message">Aucune interaction</p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+                {/* BOUTONS D'ACTION */}
+                <div className="crm-action-buttons">
+                  <button
+                    onClick={() => {
+                      setShowForm(!showForm);
+                      setEditingId(null);
+                      setFormData({ 
+                        name: '', 
+                        email: '', 
+                        phone: '', 
+                        company: '', 
+                        status: 'prospect', 
+                        notes: '' 
+                      });
+                    }}
+                    className="crm-button-add"
+                    disabled={loading}
+                    title="Ajouter un nouveau contact"
+                  >
+                    <Plus size={18} /> 
+                    <span>Ajouter</span>
+                  </button>
 
-            <div>
-              <div className="crm-interactions-sidebar">
-                <h3 className="crm-sidebar-title">Contacts rapides</h3>
-                <div className="crm-contact-list">
-                  {contacts.map(contact => (
-                    <button
-                      key={contact.id}
-                      onClick={() => setSelectedContact(contact)}
-                      className={`crm-contact-button ${selectedContact?.id === contact.id ? 'active' : ''}`}
-                    >
-                      <h4>{contact.name}</h4>
-                      <p>{contact.company}</p>
-                    </button>
-                  ))}
+                  <button
+                    onClick={exportToPDF}
+                    className="crm-button-export"
+                    title="Exporter les contacts"
+                  >
+                    <Download size={18} /> 
+                    <span>Export</span>
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
+          </>
+        )}
+
+        {/* ===== PIPELINE TAB ===== */}
+        {activeTab === 'pipeline' && (
+          <>
+            {/* CONTENU EN PREMIER */}
+            {renderPipeline()}
+
+            {/* TOOLBAR PIPELINE - EN DERNIER */}
+            <div className="crm-toolbar">
+              <div className="crm-toolbar-content">
+                <p className="crm-toolbar-text">Organisez vos prospects par statut</p>
+                <button
+                  onClick={exportToPDF}
+                  className="crm-button-export"
+                  title="Exporter les contacts"
+                >
+                  <Download size={18} /> 
+                  <span>Export</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ===== INTERACTIONS TAB ===== */}
+        {activeTab === 'interactions' && (
+          <>
+            {/* CONTENU EN PREMIER */}
+            <div className="crm-interactions-grid">
+              <div>
+                <div className="crm-interactions-main">
+                  <h3 className="crm-interactions-title">
+                    {selectedContact ? `Interactions - ${selectedContact.name}` : 'Sélectionnez un contact'}
+                  </h3>
+                  
+                  {selectedContact && (
+                    <>
+                      <textarea
+                        placeholder="Ajouter une interaction (appel, email, réunion...)"
+                        value={interactionText}
+                        onChange={(e) => setInteractionText(e.target.value)}
+                        className="crm-interactions-textarea"
+                      />
+                      <button
+                        onClick={addInteraction}
+                        disabled={loading}
+                        className="crm-interactions-button"
+                      >
+                        {loading ? 'Ajout...' : 'Ajouter interaction'}
+                      </button>
+
+                      <div className="crm-interactions-list">
+                        {getContactInteractions(selectedContact.id).length > 0 ? (
+                          getContactInteractions(selectedContact.id).map(interaction => (
+                            <div key={interaction.id} className="crm-interaction-item">
+                              <p className="crm-interaction-text">{interaction.text}</p>
+                              <p className="crm-interaction-date">📅 {new Date(interaction.created_at).toLocaleString('fr-FR')}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="crm-empty-message">Aucune interaction</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="crm-interactions-sidebar">
+                  <h3 className="crm-sidebar-title">Contacts rapides</h3>
+                  <div className="crm-contact-list">
+                    {contacts.map(contact => (
+                      <button
+                        key={contact.id}
+                        onClick={() => setSelectedContact(contact)}
+                        className={`crm-contact-button ${selectedContact?.id === contact.id ? 'active' : ''}`}
+                      >
+                        <h4>{contact.name}</h4>
+                        <p>{contact.company}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* TOOLBAR INTERACTIONS - EN DERNIER */}
+            <div className="crm-toolbar">
+              <div className="crm-toolbar-content">
+                <p className="crm-toolbar-text">Sélectionnez un contact pour voir ses interactions</p>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

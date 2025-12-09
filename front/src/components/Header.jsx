@@ -1,9 +1,11 @@
 import { useLocation } from 'react-router-dom';
-import { Menu, X, Lock } from 'lucide-react';
+import { Menu, X, Lock, LogOut } from 'lucide-react';
+import { useState } from 'react';
 
-// Composant Header avec titre dynamique
-export function Header({ menuOpen, setMenuOpen }) {
+// Composant Header avec titre dynamique et user menu CRM
+export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
   const location = useLocation();
+  const [showUserMenu, setShowUserMenu] = useState(false);
   
   const getTitleByPath = (path) => {
     switch(path) {
@@ -14,7 +16,7 @@ export function Header({ menuOpen, setMenuOpen }) {
       case '/contact':
         return 'Contact';
       case '/crm':
-        return 'CRM';
+        return 'CRM Pro';
       default:
         return 'Mon Application';
     }
@@ -22,11 +24,18 @@ export function Header({ menuOpen, setMenuOpen }) {
 
   const title = getTitleByPath(location.pathname);
 
+  const handleLogout = () => {
+    setShowUserMenu(false);
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
   return (
     <>
       <nav className="navbar">
         <div className="navbar-container">
-          <h1 className="navbar-title">Mon Application</h1>
+          <h1 className="navbar-title">Prism CRM</h1>
           
           <div className="desktop-menu">
             <a href="/">Accueil</a>
@@ -36,6 +45,35 @@ export function Header({ menuOpen, setMenuOpen }) {
               <Lock size={18} />
             </a>
           </div>
+
+          {/* User Menu (si connecté au CRM) */}
+          {currentUser && (
+            <div className="user-menu-desktop">
+              <button 
+                className="user-menu-toggle"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                title={currentUser.email}
+              >
+                <div className="user-avatar">
+                  {currentUser.email.charAt(0).toUpperCase()}
+                </div>
+              </button>
+              
+              {showUserMenu && (
+                <div className="user-menu-dropdown">
+                  <div className="user-menu-header">
+                    <p className="user-email">{currentUser.email}</p>
+                  </div>
+                  <button 
+                    className="user-menu-logout"
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={16} /> Déconnexion
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <button 
             onClick={() => setMenuOpen(!menuOpen)}
@@ -54,17 +92,25 @@ export function Header({ menuOpen, setMenuOpen }) {
           <a href="/crm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Lock size={18} /> CRM
           </a>
+          {currentUser && (
+            <button 
+              className="mobile-logout-btn"
+              onClick={handleLogout}
+            >
+              <LogOut size={16} /> Déconnexion
+            </button>
+          )}
         </div>
       )}
 
-      {location.pathname === '/stats' ? (
+      {location.pathname === '/stats' && !currentUser && (
         <div className="banner">
           <div className="banner-container">
             <h2 className="banner-title">{title}</h2>
             <p className="banner-subtitle">Découvrez vos statistiques Battlefield 6</p>
           </div>
         </div>
-      ) : null}
+      )}
     </>
   );
 }

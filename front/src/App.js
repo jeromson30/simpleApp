@@ -15,8 +15,10 @@ function AppContent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [bfStats, setBfStats] = useState([]);
   const [loadingBf, setLoadingBf] = useState(true);
+  const [currentCrmUser, setCurrentCrmUser] = useState(null);
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
     fetchData();
@@ -219,18 +221,29 @@ function AppContent() {
     }
   };
   
-  // Mettre à jour le titre de la page web
-  const location = useLocation();
-  
   useEffect(() => {
     document.title = `Jeromson - ${location.pathname} - `;
-  }, []);
+  }, [location.pathname]);
+
+  // Gestionnaires pour le CRM
+  const handleCrmLogin = (user) => {
+    setCurrentCrmUser(user);
+  };
+
+  const handleCrmLogout = () => {
+    setCurrentCrmUser(null);
+  };
 
   return (
     <div className="App">
       <canvas ref={canvasRef} className="pixi-background" />
 
-      <Header menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <Header 
+        menuOpen={menuOpen} 
+        setMenuOpen={setMenuOpen}
+        onLogout={handleCrmLogout}
+        currentUser={currentCrmUser}
+      />
 
       <Routes>
         <Route 
@@ -247,13 +260,13 @@ function AppContent() {
         />
         <Route 
           path="/crm" 
-          element={<CRM />} 
+          element={<CRM onLogin={handleCrmLogin} onLogout={handleCrmLogout} />} 
         />
       </Routes>
 
       <footer className="footer">
         <div className="footer-container">
-          <p>&copy; 2025 Mon Application. Tous droits réservés.</p>
+          <p>&copy; 2025 Prism CRM. Tous droits réservés.</p>
         </div>
       </footer>
     </div>
