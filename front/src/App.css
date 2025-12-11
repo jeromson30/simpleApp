@@ -1587,3 +1587,304 @@ main, nav, footer, .banner {
   animation-fill-mode: both;
   animation-delay: 0.2s;
 }
+
+/* ===== STYLES PIPELINE CRM - CARTES VISIBLES ===== */
+/* Ajoutez ces styles à votre App.css */
+
+.crm-pipeline-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  padding: 1rem;
+  min-height: 400px;
+}
+
+.crm-pipeline-column {
+  background: rgba(30, 30, 50, 0.9);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(100, 200, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.crm-pipeline-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(100, 200, 255, 0.3);
+  color: #fff;
+  text-align: center;
+}
+
+.crm-pipeline-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 200px;
+}
+
+.crm-pipeline-card {
+  background: linear-gradient(135deg, rgba(100, 200, 255, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%);
+  border: 1px solid rgba(100, 200, 255, 0.4);
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.crm-pipeline-card:hover {
+  background: linear-gradient(135deg, rgba(100, 200, 255, 0.4) 0%, rgba(168, 85, 247, 0.25) 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(100, 200, 255, 0.3);
+  border-color: rgba(100, 200, 255, 0.6);
+}
+
+.crm-pipeline-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 0.5rem 0;
+}
+
+.crm-pipeline-card p {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.crm-pipeline-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  padding: 2rem 1rem;
+  font-style: italic;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+/* Couleurs spécifiques par colonne */
+.crm-pipeline-column:nth-child(1) .crm-pipeline-card {
+  border-left: 3px solid #f59e0b; /* Orange pour prospects */
+}
+
+.crm-pipeline-column:nth-child(2) .crm-pipeline-card {
+  border-left: 3px solid #10b981; /* Vert pour clients */
+}
+
+.crm-pipeline-column:nth-child(3) .crm-pipeline-card {
+  border-left: 3px solid #ef4444; /* Rouge pour perdus */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .crm-pipeline-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== STYLES CRM - LICENCES ET ÉQUIPE ===== */
+
+/* PIPELINE */
+.crm-pipeline-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1rem; min-height: 400px; }
+.crm-pipeline-column { background: rgba(30, 30, 50, 0.9); border-radius: 12px; padding: 1rem; border: 1px solid rgba(100, 200, 255, 0.3); }
+.crm-pipeline-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid rgba(100, 200, 255, 0.3); color: #fff; text-align: center; }
+.crm-pipeline-cards { display: flex; flex-direction: column; gap: 0.75rem; min-height: 200px; }
+.crm-pipeline-card { background: linear-gradient(135deg, rgba(100, 200, 255, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%); border: 1px solid rgba(100, 200, 255, 0.4); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+.crm-pipeline-card:hover { background: linear-gradient(135deg, rgba(100, 200, 255, 0.4) 0%, rgba(168, 85, 247, 0.25) 100%); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(100, 200, 255, 0.3); }
+.crm-pipeline-card h4 { font-size: 1rem; font-weight: 600; color: #fff; margin: 0 0 0.5rem 0; }
+.crm-pipeline-card p { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); margin: 0; }
+.crm-pipeline-empty { text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 0.9rem; padding: 2rem 1rem; font-style: italic; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.2); }
+.crm-pipeline-column:nth-child(1) .crm-pipeline-card { border-left: 3px solid #f59e0b; }
+.crm-pipeline-column:nth-child(2) .crm-pipeline-card { border-left: 3px solid #10b981; }
+.crm-pipeline-column:nth-child(3) .crm-pipeline-card { border-left: 3px solid #ef4444; }
+
+/* USER BANNER */
+.crm-user-banner { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background: rgba(30, 30, 50, 0.8); border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(100, 200, 255, 0.2); }
+.crm-user-info { display: flex; align-items: center; gap: 1rem; }
+.crm-user-email { color: #fff; font-weight: 500; }
+.crm-license-badge-small { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: #fff; }
+.crm-logout-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; color: #ef4444; cursor: pointer; transition: all 0.2s; }
+.crm-logout-btn:hover { background: rgba(239, 68, 68, 0.3); }
+
+/* LICENSE SELECTION */
+.crm-license-selection { margin: 1rem 0; }
+.crm-license-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.crm-license-card { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+.crm-license-card:hover { background: rgba(255, 255, 255, 0.1); }
+.crm-license-card.selected { background: rgba(100, 200, 255, 0.1); }
+.crm-license-card h4 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+.crm-license-price { font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); margin: 0.25rem 0; }
+.crm-license-users { display: flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); margin: 0; }
+.crm-link-button { background: none; border: none; color: #64c8ff; cursor: pointer; text-decoration: underline; font-size: inherit; }
+.crm-link-button:hover { color: #a855f7; }
+
+/* TEAM MANAGEMENT */
+.crm-team-container { padding: 1rem; }
+.crm-license-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.5rem; background: rgba(30, 30, 50, 0.9); border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(100, 200, 255, 0.2); }
+.crm-license-info { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.crm-license-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; border-radius: 25px; font-weight: 600; color: #fff; font-size: 1rem; }
+.crm-license-details p { margin: 0 0 0.5rem 0; color: rgba(255, 255, 255, 0.8); }
+.crm-license-bar { width: 200px; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; }
+.crm-license-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+.crm-license-warning { color: #ef4444 !important; font-size: 0.85rem; margin-top: 0.5rem !important; }
+
+/* TEAM LIST */
+.crm-team-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.crm-team-member { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; transition: all 0.2s; flex-wrap: wrap; }
+.crm-team-member:hover { background: rgba(255, 255, 255, 0.08); }
+.crm-team-owner { background: rgba(100, 200, 255, 0.1); border-color: rgba(100, 200, 255, 0.3); }
+.crm-team-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #64c8ff 0%, #a855f7 100%); display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.crm-team-info { flex: 1; min-width: 150px; }
+.crm-team-info h4 { margin: 0 0 0.25rem 0; color: #fff; font-size: 0.95rem; }
+.crm-team-meta { color: rgba(255, 255, 255, 0.5); font-size: 0.8rem; }
+.crm-team-meta p { margin: 0; }
+.crm-team-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+/* ROLE BADGES */
+.crm-role-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+.crm-role-owner { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
+.crm-role-admin { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: #fff; }
+.crm-role-manager { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #fff; }
+.crm-role-member { background: rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.8); }
+.crm-role-select { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 0.4rem 0.6rem; color: #fff; font-size: 0.8rem; cursor: pointer; }
+.crm-role-select:focus { outline: none; border-color: #64c8ff; }
+
+/* DELETE BUTTON SMALL */
+.crm-btn-delete-small { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.4rem; color: #ef4444; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.crm-btn-delete-small:hover { background: rgba(239, 68, 68, 0.3); }
+
+/* UPGRADE CTA */
+.crm-upgrade-cta { margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(100, 200, 255, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border: 1px solid rgba(100, 200, 255, 0.2); border-radius: 12px; text-align: center; }
+.crm-upgrade-cta h4 { margin: 0 0 0.5rem 0; color: #fff; font-size: 1.1rem; }
+.crm-upgrade-cta > p { color: rgba(255, 255, 255, 0.7); margin: 0 0 1.5rem 0; }
+.crm-upgrade-options { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+.crm-upgrade-option { background: rgba(255, 255, 255, 0.05); border: 2px solid; border-radius: 10px; padding: 1rem 1.5rem; min-width: 140px; transition: all 0.2s; cursor: pointer; }
+.crm-upgrade-option:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.1); }
+.crm-upgrade-option h5 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+.crm-upgrade-option p { margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; }
+.crm-upgrade-option .crm-upgrade-price { font-weight: 600; color: #fff; margin-top: 0.5rem; }
+
+/* FORM ACTIONS */
+.crm-form-actions { display: flex; gap: 0.75rem; grid-column: 1 / -1; }
+.crm-form-cancel { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 0.75rem 1.5rem; color: rgba(255, 255, 255, 0.8); cursor: pointer; transition: all 0.2s; }
+.crm-form-cancel:hover { background: rgba(255, 255, 255, 0.15); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .crm-pipeline-grid { grid-template-columns: 1fr; }
+  .crm-license-grid { grid-template-columns: 1fr; }
+  .crm-license-header { flex-direction: column; align-items: flex-start; }
+  .crm-license-bar { width: 100%; }
+  .crm-user-banner { flex-direction: column; gap: 1rem; text-align: center; }
+  .crm-team-member { flex-direction: column; text-align: center; }
+  .crm-team-actions { width: 100%; justify-content: center; }
+}/* ===== STYLES CRM - LICENCES ET ÉQUIPE ===== */
+
+/* PIPELINE */
+.crm-pipeline-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1rem; min-height: 400px; }
+.crm-pipeline-column { background: rgba(30, 30, 50, 0.9); border-radius: 12px; padding: 1rem; border: 1px solid rgba(100, 200, 255, 0.3); }
+.crm-pipeline-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid rgba(100, 200, 255, 0.3); color: #fff; text-align: center; }
+.crm-pipeline-cards { display: flex; flex-direction: column; gap: 0.75rem; min-height: 200px; }
+.crm-pipeline-card { background: linear-gradient(135deg, rgba(100, 200, 255, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%); border: 1px solid rgba(100, 200, 255, 0.4); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+.crm-pipeline-card:hover { background: linear-gradient(135deg, rgba(100, 200, 255, 0.4) 0%, rgba(168, 85, 247, 0.25) 100%); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(100, 200, 255, 0.3); }
+.crm-pipeline-card h4 { font-size: 1rem; font-weight: 600; color: #fff; margin: 0 0 0.5rem 0; }
+.crm-pipeline-card p { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); margin: 0; }
+.crm-pipeline-empty { text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 0.9rem; padding: 2rem 1rem; font-style: italic; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.2); }
+.crm-pipeline-column:nth-child(1) .crm-pipeline-card { border-left: 3px solid #f59e0b; }
+.crm-pipeline-column:nth-child(2) .crm-pipeline-card { border-left: 3px solid #10b981; }
+.crm-pipeline-column:nth-child(3) .crm-pipeline-card { border-left: 3px solid #ef4444; }
+
+/* USER BANNER */
+.crm-user-banner { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background: rgba(30, 30, 50, 0.8); border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(100, 200, 255, 0.2); }
+.crm-user-info { display: flex; align-items: center; gap: 1rem; }
+.crm-user-email { color: #fff; font-weight: 500; }
+.crm-license-badge-small { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: #fff; }
+.crm-logout-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; color: #ef4444; cursor: pointer; transition: all 0.2s; }
+.crm-logout-btn:hover { background: rgba(239, 68, 68, 0.3); }
+
+/* LICENSE SELECTION */
+.crm-license-selection { margin: 1rem 0; }
+.crm-license-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.crm-license-card { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+.crm-license-card:hover { background: rgba(255, 255, 255, 0.1); }
+.crm-license-card.selected { background: rgba(100, 200, 255, 0.1); }
+.crm-license-card h4 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+.crm-license-price { font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); margin: 0.25rem 0; }
+.crm-license-users { display: flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); margin: 0; }
+.crm-link-button { background: none; border: none; color: #64c8ff; cursor: pointer; text-decoration: underline; font-size: inherit; }
+.crm-link-button:hover { color: #a855f7; }
+
+/* TEAM MANAGEMENT */
+.crm-team-container { padding: 1rem; }
+.crm-license-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.5rem; background: rgba(30, 30, 50, 0.9); border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(100, 200, 255, 0.2); }
+.crm-license-info { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.crm-license-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; border-radius: 25px; font-weight: 600; color: #fff; font-size: 1rem; }
+.crm-license-details p { margin: 0 0 0.5rem 0; color: rgba(255, 255, 255, 0.8); }
+.crm-license-bar { width: 200px; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; }
+.crm-license-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+.crm-license-warning { color: #ef4444 !important; font-size: 0.85rem; margin-top: 0.5rem !important; }
+
+/* TEAM LIST */
+.crm-team-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.crm-team-member { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; transition: all 0.2s; flex-wrap: wrap; }
+.crm-team-member:hover { background: rgba(255, 255, 255, 0.08); }
+.crm-team-owner { background: rgba(100, 200, 255, 0.1); border-color: rgba(100, 200, 255, 0.3); }
+.crm-team-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #64c8ff 0%, #a855f7 100%); display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.crm-team-info { flex: 1; min-width: 150px; }
+.crm-team-info h4 { margin: 0 0 0.25rem 0; color: #fff; font-size: 0.95rem; }
+.crm-team-meta { color: rgba(255, 255, 255, 0.5); font-size: 0.8rem; }
+.crm-team-meta p { margin: 0; }
+.crm-team-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+/* ROLE BADGES */
+.crm-role-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+.crm-role-owner { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
+.crm-role-admin { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: #fff; }
+.crm-role-manager { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #fff; }
+.crm-role-member { background: rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.8); }
+.crm-role-select { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 0.4rem 0.6rem; color: #fff; font-size: 0.8rem; cursor: pointer; }
+.crm-role-select:focus { outline: none; border-color: #64c8ff; }
+
+/* DELETE BUTTON SMALL */
+.crm-btn-delete-small { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.4rem; color: #ef4444; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.crm-btn-delete-small:hover { background: rgba(239, 68, 68, 0.3); }
+
+/* UPGRADE CTA */
+.crm-upgrade-cta { margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(100, 200, 255, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border: 1px solid rgba(100, 200, 255, 0.2); border-radius: 12px; text-align: center; }
+.crm-upgrade-cta h4 { margin: 0 0 0.5rem 0; color: #fff; font-size: 1.1rem; }
+.crm-upgrade-cta > p { color: rgba(255, 255, 255, 0.7); margin: 0 0 1.5rem 0; }
+.crm-upgrade-options { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+.crm-upgrade-option { background: rgba(255, 255, 255, 0.05); border: 2px solid; border-radius: 10px; padding: 1rem 1.5rem; min-width: 140px; transition: all 0.2s; cursor: pointer; }
+.crm-upgrade-option:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.1); }
+.crm-upgrade-option h5 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+.crm-upgrade-option p { margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; }
+.crm-upgrade-option .crm-upgrade-price { font-weight: 600; color: #fff; margin-top: 0.5rem; }
+
+/* FORM ACTIONS */
+.crm-form-actions { display: flex; gap: 0.75rem; grid-column: 1 / -1; }
+.crm-form-cancel { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 0.75rem 1.5rem; color: rgba(255, 255, 255, 0.8); cursor: pointer; transition: all 0.2s; }
+.crm-form-cancel:hover { background: rgba(255, 255, 255, 0.15); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .crm-pipeline-grid { grid-template-columns: 1fr; }
+  .crm-license-grid { grid-template-columns: 1fr; }
+  .crm-license-header { flex-direction: column; align-items: flex-start; }
+  .crm-license-bar { width: 100%; }
+  .crm-user-banner { flex-direction: column; gap: 1rem; text-align: center; }
+  .crm-team-member { flex-direction: column; text-align: center; }
+  .crm-team-actions { width: 100%; justify-content: center; }
+}
+
+/* ANIMATION LOADING */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
