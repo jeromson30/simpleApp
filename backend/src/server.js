@@ -26,9 +26,52 @@ const supabaseHeaders = {
   'Prefer': 'return=representation'
 };
 
+// ==================== HELPER: Vérifier si utilisateur suspendu ====================
+
+const checkUserSuspended = async (userId) => {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+    url.searchParams.append('id', `eq.${userId}`);
+    url.searchParams.append('select', 'suspended,owner_id');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const users = await response.json();
+
+    if (!users || users.length === 0) {
+      return { suspended: false, notFound: true };
+    }
+
+    const user = users[0];
+
+    // Vérifier si l'utilisateur est suspendu
+    if (user.suspended) {
+      return { suspended: true, reason: 'Votre compte a été suspendu' };
+    }
+
+    // Si c'est un sous-compte, vérifier aussi si le propriétaire est suspendu
+    if (user.owner_id) {
+      const ownerUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+      ownerUrl.searchParams.append('id', `eq.${user.owner_id}`);
+      ownerUrl.searchParams.append('select', 'suspended');
+
+      const ownerResponse = await fetch(ownerUrl.toString(), { headers: supabaseHeaders });
+      const owners = await ownerResponse.json();
+
+      if (owners && owners.length > 0 && owners[0].suspended) {
+        return { suspended: true, reason: 'Le compte principal a été suspendu' };
+      }
+    }
+
+    return { suspended: false };
+  } catch (error) {
+    console.error('Erreur vérification suspension:', error);
+    return { suspended: false };
+  }
+};
+
 // ==================== MIDDLEWARE JWT ====================
 
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -36,12 +79,25 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Token d\'authentification requis' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, JWT_SECRET, async (err, decoded) => {
     if (err) {
       if (err.name === 'TokenExpiredError') {
         return res.status(401).json({ error: 'Token expiré', code: 'TOKEN_EXPIRED' });
       }
       return res.status(403).json({ error: 'Token invalide' });
+    }
+
+    // ✅ NOUVEAU: Vérifier si l'utilisateur est suspendu
+    const suspendedCheck = await checkUserSuspended(decoded.id);
+    if (suspendedCheck.suspended) {
+      return res.status(403).json({ 
+        error: suspendedCheck.reason,
+        code: 'ACCOUNT_SUSPENDED'
+      });
+    }
+
+    if (suspendedCheck.notFound) {
+      return res.status(401).json({ error: 'Compte inexistant' });
     }
     
     req.user = decoded;
@@ -140,6 +196,7 @@ app.post('/api/crm/auth/register', async (req, res) => {
       is_owner: true,
       owner_id: null,
       role: 'owner',
+      suspended: false, // ✅ Nouveau compte = non suspendu
       created_at: new Date().toISOString()
     };
 
@@ -203,13 +260,21 @@ app.post('/api/crm/auth/login', async (req, res) => {
 
     const user = users[0];
 
+    // ✅ NOUVEAU: Vérifier si l'utilisateur est suspendu AVANT de vérifier le mot de passe
+    if (user.suspended) {
+      return res.status(403).json({ 
+        error: 'Votre compte a été suspendu. Contactez l\'administrateur.',
+        code: 'ACCOUNT_SUSPENDED'
+      });
+    }
+
     // Vérifier le mot de passe
     const isValidPassword = await comparePassword(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Identifiants invalides' });
     }
 
-    // Si c'est un sous-compte, récupérer les infos du propriétaire
+    // Si c'est un sous-compte, vérifier si le propriétaire est suspendu
     let licenseInfo = {
       license: user.license,
       maxUsers: getLicenseMaxUsers(user.license)
@@ -218,12 +283,19 @@ app.post('/api/crm/auth/login', async (req, res) => {
     if (!user.is_owner && user.owner_id) {
       const ownerUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
       ownerUrl.searchParams.append('id', `eq.${user.owner_id}`);
-      ownerUrl.searchParams.append('select', 'license');
+      ownerUrl.searchParams.append('select', 'license,suspended');
 
       const ownerResponse = await fetch(ownerUrl.toString(), { headers: supabaseHeaders });
       const owners = await ownerResponse.json();
 
       if (owners && owners.length > 0) {
+        // ✅ NOUVEAU: Vérifier si le propriétaire est suspendu
+        if (owners[0].suspended) {
+          return res.status(403).json({ 
+            error: 'Le compte principal a été suspendu. Contactez l\'administrateur.',
+            code: 'OWNER_SUSPENDED'
+          });
+        }
         licenseInfo.license = owners[0].license;
         licenseInfo.maxUsers = getLicenseMaxUsers(owners[0].license);
       }
@@ -271,6 +343,14 @@ app.get('/api/crm/auth/me', authenticateToken, async (req, res) => {
 
     const user = users[0];
 
+    // ✅ Double vérification de suspension (déjà fait dans le middleware mais sécurité supplémentaire)
+    if (user.suspended) {
+      return res.status(403).json({ 
+        error: 'Votre compte a été suspendu',
+        code: 'ACCOUNT_SUSPENDED'
+      });
+    }
+
     // Récupérer la licence effective
     let license = user.license;
     let maxUsers = getLicenseMaxUsers(license);
@@ -278,12 +358,18 @@ app.get('/api/crm/auth/me', authenticateToken, async (req, res) => {
     if (!user.is_owner && user.owner_id) {
       const ownerUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
       ownerUrl.searchParams.append('id', `eq.${user.owner_id}`);
-      ownerUrl.searchParams.append('select', 'license');
+      ownerUrl.searchParams.append('select', 'license,suspended');
 
       const ownerResponse = await fetch(ownerUrl.toString(), { headers: supabaseHeaders });
       const owners = await ownerResponse.json();
 
       if (owners && owners.length > 0) {
+        if (owners[0].suspended) {
+          return res.status(403).json({ 
+            error: 'Le compte principal a été suspendu',
+            code: 'OWNER_SUSPENDED'
+          });
+        }
         license = owners[0].license;
         maxUsers = getLicenseMaxUsers(license);
       }
@@ -307,8 +393,9 @@ app.get('/api/crm/auth/me', authenticateToken, async (req, res) => {
 });
 
 // Rafraîchir le token
-app.post('/api/crm/auth/refresh', authenticateToken, (req, res) => {
+app.post('/api/crm/auth/refresh', authenticateToken, async (req, res) => {
   try {
+    // Le middleware authenticateToken vérifie déjà la suspension
     // Générer un nouveau token avec les mêmes informations
     const newToken = generateToken(req.user);
     res.json({ token: newToken });
@@ -325,7 +412,7 @@ app.get('/api/crm/subaccounts', authenticateToken, async (req, res) => {
 
     const url = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
     url.searchParams.append('owner_id', `eq.${ownerId}`);
-    url.searchParams.append('select', 'id,email,role,created_at');
+    url.searchParams.append('select', 'id,email,role,suspended,created_at');
     url.searchParams.append('order', 'created_at.desc');
 
     const response = await fetch(url.toString(), { headers: supabaseHeaders });
@@ -391,6 +478,7 @@ app.post('/api/crm/subaccounts', authenticateToken, async (req, res) => {
       is_owner: false,
       owner_id: req.user.id,
       role: role || 'member',
+      suspended: false, // ✅ Nouveau sous-compte = non suspendu
       created_at: new Date().toISOString()
     };
 
@@ -410,6 +498,7 @@ app.post('/api/crm/subaccounts', authenticateToken, async (req, res) => {
       id: created[0]?.id || subAccountId,
       email,
       role: role || 'member',
+      suspended: false,
       created_at: newSubAccount.created_at
     });
 
@@ -707,6 +796,230 @@ app.get('/api/crm/licenses', (req, res) => {
   });
 });
 
+// ==================== ADMIN ROUTES ====================
+
+// Admin middleware
+const authenticateAdmin = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token requis' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Token invalide' });
+    }
+    
+    if (!decoded.isAdmin) {
+      return res.status(403).json({ error: 'Accès non autorisé' });
+    }
+    
+    req.user = decoded;
+    next();
+  });
+};
+
+// Admin Login
+app.post('/api/admin/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email et password requis' });
+  }
+
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_admins`);
+    url.searchParams.append('email', `eq.${email}`);
+    url.searchParams.append('select', '*');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const admins = await response.json();
+
+    if (!admins || admins.length === 0) {
+      return res.status(401).json({ error: 'Identifiants invalides' });
+    }
+
+    const admin = admins[0];
+
+    const isValidPassword = await bcrypt.compare(password, admin.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Identifiants invalides' });
+    }
+
+    const token = jwt.sign(
+      {
+        id: admin.id,
+        email: admin.email,
+        isAdmin: true,
+        role: admin.role || 'admin'
+      },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: admin.id,
+        email: admin.email,
+        isAdmin: true,
+        role: admin.role || 'admin'
+      }
+    });
+
+  } catch (error) {
+    console.error('Erreur login admin:', error);
+    res.status(500).json({ error: 'Erreur de connexion' });
+  }
+});
+
+// Admin - Get all users
+app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+    url.searchParams.append('select', 'id,email,license,is_owner,owner_id,role,suspended,created_at');
+    url.searchParams.append('order', 'created_at.desc');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const users = await response.json();
+
+    res.json(users || []);
+  } catch (error) {
+    console.error('Erreur fetch users:', error);
+    res.status(500).json({ error: 'Erreur chargement utilisateurs' });
+  }
+});
+
+// Admin - Suspend/Unsuspend user
+app.patch('/api/admin/users/:id/suspend', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { suspended } = req.body;
+
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+    url.searchParams.append('id', `eq.${id}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify({ 
+        suspended: suspended,
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({ message: suspended ? 'Utilisateur suspendu' : 'Utilisateur réactivé' });
+  } catch (error) {
+    console.error('Erreur suspension:', error);
+    res.status(500).json({ error: 'Erreur modification utilisateur' });
+  }
+});
+
+// Admin - Update user license
+app.patch('/api/admin/users/:id/license', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { license } = req.body;
+
+  if (!['starter', 'pro', 'business', 'enterprise'].includes(license)) {
+    return res.status(400).json({ error: 'Licence invalide' });
+  }
+
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+    url.searchParams.append('id', `eq.${id}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify({ 
+        license,
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({ message: 'Licence mise à jour', license });
+  } catch (error) {
+    console.error('Erreur licence:', error);
+    res.status(500).json({ error: 'Erreur modification licence' });
+  }
+});
+
+// Admin - Delete user
+app.delete('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Supprimer les sous-comptes
+    const subUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+    subUrl.searchParams.append('owner_id', `eq.${id}`);
+    await fetch(subUrl.toString(), { method: 'DELETE', headers: supabaseHeaders });
+
+    // Supprimer les contacts
+    const contactsUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_contacts`);
+    contactsUrl.searchParams.append('owner_id', `eq.${id}`);
+    await fetch(contactsUrl.toString(), { method: 'DELETE', headers: supabaseHeaders });
+
+    // Supprimer les interactions
+    const interUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_interactions`);
+    interUrl.searchParams.append('owner_id', `eq.${id}`);
+    await fetch(interUrl.toString(), { method: 'DELETE', headers: supabaseHeaders });
+
+    // Supprimer l'utilisateur
+    const userUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+    userUrl.searchParams.append('id', `eq.${id}`);
+    await fetch(userUrl.toString(), { method: 'DELETE', headers: supabaseHeaders });
+
+    res.json({ message: 'Utilisateur supprimé' });
+  } catch (error) {
+    console.error('Erreur suppression:', error);
+    res.status(500).json({ error: 'Erreur suppression utilisateur' });
+  }
+});
+
+// Admin - Stats
+app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
+  try {
+    const usersUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+    usersUrl.searchParams.append('select', 'id,license,suspended,is_owner');
+    const usersResponse = await fetch(usersUrl.toString(), { headers: supabaseHeaders });
+    const users = await usersResponse.json();
+
+    const contactsUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_contacts`);
+    contactsUrl.searchParams.append('select', 'id');
+    const contactsResponse = await fetch(contactsUrl.toString(), { headers: supabaseHeaders });
+    const contacts = await contactsResponse.json();
+
+    const stats = {
+      totalUsers: users.length,
+      activeUsers: users.filter(u => !u.suspended).length,
+      suspendedUsers: users.filter(u => u.suspended).length,
+      ownerAccounts: users.filter(u => u.is_owner).length,
+      totalContacts: contacts.length,
+      licenseDistribution: {
+        starter: users.filter(u => u.license === 'starter').length,
+        pro: users.filter(u => u.license === 'pro').length,
+        business: users.filter(u => u.license === 'business').length,
+        enterprise: users.filter(u => u.license === 'enterprise').length
+      }
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Erreur stats admin:', error);
+    res.status(500).json({ error: 'Erreur chargement stats' });
+  }
+});
+
 // ==================== ROUTES EXISTANTES ====================
 
 app.get('/api/data', (req, res) => {
@@ -736,4 +1049,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Serveur CRM démarré sur le port ${PORT}`);
   console.log(`🔐 JWT activé (expire: ${JWT_EXPIRES_IN})`);
   console.log(`📊 API: http://localhost:${PORT}/api/crm`);
+  console.log(`🛡️ Admin: http://localhost:${PORT}/api/admin`);
 });

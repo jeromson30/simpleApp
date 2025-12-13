@@ -55,6 +55,9 @@ const AuthService = {
 // ==================== API SERVICE ====================
 
 const ApiService = {
+  // Callback pour gérer la suspension (sera défini par le composant)
+  onSuspended: null,
+
   // Requête générique avec gestion du token
   async request(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`;
@@ -86,6 +89,21 @@ const ApiService = {
         AuthService.clearAuth();
         window.location.reload();
         throw new Error('Session expirée');
+      }
+
+      // ✅ NOUVEAU: Gérer la suspension
+      if (response.status === 403) {
+        const data = await response.json();
+        if (data.code === 'ACCOUNT_SUSPENDED' || data.code === 'OWNER_SUSPENDED') {
+          AuthService.clearAuth();
+          if (this.onSuspended) {
+            this.onSuspended(data.error);
+          } else {
+            alert(data.error);
+            window.location.reload();
+          }
+          throw new Error(data.error);
+        }
       }
       
       return response;
@@ -205,6 +223,7 @@ export function CRM({ onLogin, onLogout }) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [selectedLicense, setSelectedLicense] = useState('starter');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [suspendedMessage, setSuspendedMessage] = useState(null); // ✅ NOUVEAU
   
   // Sub-accounts states
   const [subAccounts, setSubAccounts] = useState([]);
@@ -225,6 +244,22 @@ export function CRM({ onLogin, onLogout }) {
     name: '', email: '', phone: '', company: '', status: 'prospect', notes: ''
   });
 
+  // ✅ NOUVEAU: Configurer le callback de suspension
+  useEffect(() => {
+    ApiService.onSuspended = (message) => {
+      setCurrentUser(null);
+      setContacts([]);
+      setInteractions([]);
+      setSubAccounts([]);
+      setSuspendedMessage(message);
+      if (onLogout) onLogout();
+    };
+
+    return () => {
+      ApiService.onSuspended = null;
+    };
+  }, [onLogout]);
+
   // ==================== AUTH CHECK ON MOUNT ====================
 
   useEffect(() => {
@@ -238,6 +273,11 @@ export function CRM({ onLogin, onLogout }) {
             AuthService.setUser(user);
             if (onLogin) onLogin(user);
           } else {
+            // Vérifier si c'est une suspension
+            const data = await response.json().catch(() => ({}));
+            if (data.code === 'ACCOUNT_SUSPENDED' || data.code === 'OWNER_SUSPENDED') {
+              setSuspendedMessage(data.error);
+            }
             AuthService.clearAuth();
           }
         } catch {
@@ -347,11 +387,18 @@ export function CRM({ onLogin, onLogout }) {
     }
 
     setLoading(true);
+    setSuspendedMessage(null); // Reset le message de suspension
+    
     try {
       const response = await ApiService.login(email, password);
       const data = await response.json();
 
       if (!response.ok) {
+        // ✅ NOUVEAU: Gérer la suspension à la connexion
+        if (data.code === 'ACCOUNT_SUSPENDED' || data.code === 'OWNER_SUSPENDED') {
+          setSuspendedMessage(data.error);
+          return;
+        }
         throw new Error(data.error || 'Erreur connexion');
       }
 
@@ -378,6 +425,7 @@ export function CRM({ onLogin, onLogout }) {
     setContacts([]);
     setInteractions([]);
     setSubAccounts([]);
+    setSuspendedMessage(null); // ✅ Reset le message
     if (onLogout) onLogout();
   };
 
@@ -738,11 +786,30 @@ export function CRM({ onLogin, onLogout }) {
             <h1>Prism CRM</h1>
             <p>Gestion complète de vos contacts 💎</p>
 
+            {/* ✅ NOUVEAU: Message de suspension */}
+            {suspendedMessage && (
+              <div style={{
+                padding: '1rem',
+                marginBottom: '1rem',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '8px',
+                color: '#ef4444',
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <Shield size={18} />
+                {suspendedMessage}
+              </div>
+            )}
+
             {!isRegistering ? (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <input type="email" placeholder="Email" value={email}
-                    onChange={(e) => setEmail(e.target.value)} className="crm-login-input" />
+                    onChange={(e) => { setEmail(e.target.value); setSuspendedMessage(null); }} className="crm-login-input" />
                   <input type="password" placeholder="Mot de passe" value={password}
                     onChange={(e) => setPassword(e.target.value)} className="crm-login-input"
                     onKeyPress={(e) => e.key === 'Enter' && handleLogin(e)} />

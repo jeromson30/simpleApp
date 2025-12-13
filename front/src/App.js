@@ -5,6 +5,7 @@ import { ContactContent } from './components/ContactContent';
 import { HomeContent } from './components/HomeContent';
 import { StatsContent } from './components/StatsContent';
 import { CRM } from './pages/crm';
+import AdminPanel from './pages/AdminPanel';
 import './App.css';
 
 // Composant principal
@@ -20,12 +21,18 @@ function AppContent() {
   const animationRef = useRef(null);
   const location = useLocation();
 
+  // Vérifier si on est sur la page admin (pour masquer le header/footer)
+  const isAdminPage = location.pathname.startsWith('/admin');
+
   useEffect(() => {
     fetchData();
     fetchBfStats();
   }, []);
 
   useEffect(() => {
+    // Ne pas afficher le canvas sur la page admin
+    if (isAdminPage) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -167,7 +174,7 @@ function AppContent() {
       window.removeEventListener('resize', resize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, []);
+  }, [isAdminPage]);
 
   const fetchData = async () => {
     try {
@@ -222,7 +229,10 @@ function AppContent() {
   };
   
   useEffect(() => {
-    document.title = `Jeromson - ${location.pathname} - `;
+    const pageName = location.pathname === '/' ? 'Accueil' : 
+                     location.pathname === '/admin' ? 'Administration' :
+                     location.pathname.slice(1).charAt(0).toUpperCase() + location.pathname.slice(2);
+    document.title = `Prism CRM - ${pageName}`;
   }, [location.pathname]);
 
   // Gestionnaires pour le CRM
@@ -233,6 +243,15 @@ function AppContent() {
   const handleCrmLogout = () => {
     setCurrentCrmUser(null);
   };
+
+  // Si on est sur la page admin, afficher uniquement le panel admin
+  if (isAdminPage) {
+    return (
+      <Routes>
+        <Route path="/admin/*" element={<AdminPanel />} />
+      </Routes>
+    );
+  }
 
   return (
     <div className="App">

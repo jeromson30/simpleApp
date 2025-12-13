@@ -74,3 +74,4 @@ coverage/
 .prettierignore
 todo.txt
 notes.md
+adminscript.js

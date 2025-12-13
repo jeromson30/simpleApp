@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { Menu, X, Lock, LogOut } from 'lucide-react';
+import { Menu, X, Lock, LogOut, Shield } from 'lucide-react';
 import { useState } from 'react';
 
 // Composant Header avec titre dynamique et user menu CRM
@@ -17,6 +17,8 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
         return 'Contact';
       case '/crm':
         return 'CRM Pro';
+      case '/admin':
+        return 'Administration';
       default:
         return 'Mon Application';
     }
@@ -43,6 +45,9 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
             <a href="/contact">Contact</a>
             <a href="/crm" className="nav-crm-btn" title="Accès CRM">
               <Lock size={18} />
+            </a>
+            <a href="/admin" className="nav-admin-btn" title="Administration">
+              <Shield size={18} />
             </a>
           </div>
 
@@ -91,6 +96,9 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
           <a href="/contact">Contact</a>
           <a href="/crm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Lock size={18} /> CRM
+          </a>
+          <a href="/admin" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Shield size={18} /> Admin
           </a>
           {currentUser && (
             <button 
