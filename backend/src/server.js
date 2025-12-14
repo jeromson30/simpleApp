@@ -988,9 +988,17 @@ app.delete('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
 
 // Admin - Stats
 app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
+  // Prix des licences en euros (mensuel)
+  const LICENSE_PRICES = {
+    starter: 0,
+    pro: 29,
+    business: 79,
+    enterprise: 199
+  };
+
   try {
     const usersUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
-    usersUrl.searchParams.append('select', 'id,license,suspended,is_owner');
+    usersUrl.searchParams.append('select', 'id,license,suspended,is_owner,created_at');
     const usersResponse = await fetch(usersUrl.toString(), { headers: supabaseHeaders });
     const users = await usersResponse.json();
 
@@ -999,17 +1007,71 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
     const contactsResponse = await fetch(contactsUrl.toString(), { headers: supabaseHeaders });
     const contacts = await contactsResponse.json();
 
+    // Calculer les stats par licence (seulement les owners actifs pour les revenus)
+    const activeOwners = users.filter(u => u.is_owner && !u.suspended);
+    
+    const licenseDistribution = {
+      starter: users.filter(u => u.license === 'starter').length,
+      pro: users.filter(u => u.license === 'pro').length,
+      business: users.filter(u => u.license === 'business').length,
+      enterprise: users.filter(u => u.license === 'enterprise').length
+    };
+
+    // Comptes payants actifs (owners non suspendus avec licence payante)
+    const paidSubscriptions = {
+      pro: activeOwners.filter(u => u.license === 'pro').length,
+      business: activeOwners.filter(u => u.license === 'business').length,
+      enterprise: activeOwners.filter(u => u.license === 'enterprise').length
+    };
+
+    // Calcul des revenus
+    const monthlyRevenue = {
+      pro: paidSubscriptions.pro * LICENSE_PRICES.pro,
+      business: paidSubscriptions.business * LICENSE_PRICES.business,
+      enterprise: paidSubscriptions.enterprise * LICENSE_PRICES.enterprise,
+      total: (paidSubscriptions.pro * LICENSE_PRICES.pro) + 
+             (paidSubscriptions.business * LICENSE_PRICES.business) + 
+             (paidSubscriptions.enterprise * LICENSE_PRICES.enterprise)
+    };
+
+    const annualRevenue = {
+      pro: monthlyRevenue.pro * 12,
+      business: monthlyRevenue.business * 12,
+      enterprise: monthlyRevenue.enterprise * 12,
+      total: monthlyRevenue.total * 12
+    };
+
+    // Statistiques des abonnements
+    const totalPaidSubscriptions = paidSubscriptions.pro + paidSubscriptions.business + paidSubscriptions.enterprise;
+    const totalFreeAccounts = activeOwners.filter(u => u.license === 'starter').length;
+
+    // Valeur moyenne par client payant
+    const avgRevenuePerPaidUser = totalPaidSubscriptions > 0 
+      ? (monthlyRevenue.total / totalPaidSubscriptions).toFixed(2) 
+      : 0;
+
+    // Taux de conversion (gratuit vers payant)
+    const conversionRate = activeOwners.length > 0 
+      ? ((totalPaidSubscriptions / activeOwners.length) * 100).toFixed(1) 
+      : 0;
+
     const stats = {
       totalUsers: users.length,
       activeUsers: users.filter(u => !u.suspended).length,
       suspendedUsers: users.filter(u => u.suspended).length,
       ownerAccounts: users.filter(u => u.is_owner).length,
       totalContacts: contacts.length,
-      licenseDistribution: {
-        starter: users.filter(u => u.license === 'starter').length,
-        pro: users.filter(u => u.license === 'pro').length,
-        business: users.filter(u => u.license === 'business').length,
-        enterprise: users.filter(u => u.license === 'enterprise').length
+      licenseDistribution,
+      // Nouvelles stats de revenus
+      revenue: {
+        monthly: monthlyRevenue,
+        annual: annualRevenue,
+        paidSubscriptions,
+        totalPaidSubscriptions,
+        totalFreeAccounts,
+        avgRevenuePerPaidUser: parseFloat(avgRevenuePerPaidUser),
+        conversionRate: parseFloat(conversionRate),
+        prices: LICENSE_PRICES
       }
     };
 
@@ -1017,6 +1079,358 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
   } catch (error) {
     console.error('Erreur stats admin:', error);
     res.status(500).json({ error: 'Erreur chargement stats' });
+  }
+});
+
+// ==================== CONTENT MANAGEMENT (Homepage) ====================
+
+// Get carousel slides (public)
+app.get('/api/content/carousel', async (req, res) => {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_carousel`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'sort_order.asc');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const data = await response.json();
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Erreur fetch carousel:', error);
+    res.status(500).json({ error: 'Erreur chargement carousel' });
+  }
+});
+
+// Get news/cards (public)
+app.get('/api/content/news', async (req, res) => {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_news`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'sort_order.asc');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const data = await response.json();
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Erreur fetch news:', error);
+    res.status(500).json({ error: 'Erreur chargement actualités' });
+  }
+});
+
+// Admin - Get all carousel slides
+app.get('/api/admin/content/carousel', authenticateAdmin, async (req, res) => {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_carousel`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'sort_order.asc');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const data = await response.json();
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Erreur fetch carousel:', error);
+    res.status(500).json({ error: 'Erreur chargement carousel' });
+  }
+});
+
+// Admin - Create carousel slide
+app.post('/api/admin/content/carousel', authenticateAdmin, async (req, res) => {
+  const { icon, title, description, cta_text, cta_link, color, sort_order } = req.body;
+
+  if (!title || !description) {
+    return res.status(400).json({ error: 'Titre et description requis' });
+  }
+
+  try {
+    // Récupérer le max sort_order si non fourni
+    let finalOrderIndex = sort_order;
+    if (finalOrderIndex === undefined) {
+      const countUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_carousel`);
+      countUrl.searchParams.append('select', 'sort_order');
+      countUrl.searchParams.append('order', 'sort_order.desc');
+      countUrl.searchParams.append('limit', '1');
+      
+      const countResponse = await fetch(countUrl.toString(), { headers: supabaseHeaders });
+      const maxItems = await countResponse.json();
+      finalOrderIndex = maxItems.length > 0 ? maxItems[0].sort_order + 1 : 0;
+    }
+
+    const newSlide = {
+      icon: icon || 'Zap',
+      title,
+      description,
+      cta_text: cta_text || 'En savoir plus →',
+      cta_link: cta_link || '/crm',
+      color: color || '#64c8ff',
+      sort_order: finalOrderIndex,
+      created_at: new Date().toISOString()
+    };
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_carousel`, {
+      method: 'POST',
+      headers: supabaseHeaders,
+      body: JSON.stringify(newSlide)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    const created = await response.json();
+    res.status(201).json(created[0] || newSlide);
+
+  } catch (error) {
+    console.error('Erreur création slide:', error);
+    res.status(500).json({ error: 'Erreur création slide' });
+  }
+});
+
+// Admin - Update carousel slide
+app.patch('/api/admin/content/carousel/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { icon, title, description, cta_text, cta_link, color, sort_order } = req.body;
+
+  try {
+    const updatedData = { updated_at: new Date().toISOString() };
+    if (icon !== undefined) updatedData.icon = icon;
+    if (title !== undefined) updatedData.title = title;
+    if (description !== undefined) updatedData.description = description;
+    if (cta_text !== undefined) updatedData.cta_text = cta_text;
+    if (cta_link !== undefined) updatedData.cta_link = cta_link;
+    if (color !== undefined) updatedData.color = color;
+    if (sort_order !== undefined) updatedData.sort_order = sort_order;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_carousel`);
+    url.searchParams.append('id', `eq.${id}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify(updatedData)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({ message: 'Slide mis à jour' });
+
+  } catch (error) {
+    console.error('Erreur update slide:', error);
+    res.status(500).json({ error: 'Erreur modification slide' });
+  }
+});
+
+// Admin - Delete carousel slide
+app.delete('/api/admin/content/carousel/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_carousel`);
+    url.searchParams.append('id', `eq.${id}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'DELETE',
+      headers: supabaseHeaders
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({ message: 'Slide supprimé' });
+
+  } catch (error) {
+    console.error('Erreur suppression slide:', error);
+    res.status(500).json({ error: 'Erreur suppression slide' });
+  }
+});
+
+// Admin - Reorder carousel slides
+app.post('/api/admin/content/carousel/reorder', authenticateAdmin, async (req, res) => {
+  const { items } = req.body; // Array of { id, sort_order }
+
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: 'Items requis' });
+  }
+
+  try {
+    // Update each item's sort_order
+    for (const item of items) {
+      const url = new URL(`${SUPABASE_URL}/rest/v1/crm_carousel`);
+      url.searchParams.append('id', `eq.${item.id}`);
+
+      await fetch(url.toString(), {
+        method: 'PATCH',
+        headers: supabaseHeaders,
+        body: JSON.stringify({ sort_order: item.sort_order })
+      });
+    }
+
+    res.json({ message: 'Ordre mis à jour' });
+
+  } catch (error) {
+    console.error('Erreur reorder:', error);
+    res.status(500).json({ error: 'Erreur réorganisation' });
+  }
+});
+
+// Admin - Get all news
+app.get('/api/admin/content/news', authenticateAdmin, async (req, res) => {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_news`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'sort_order.asc');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const data = await response.json();
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Erreur fetch news:', error);
+    res.status(500).json({ error: 'Erreur chargement actualités' });
+  }
+});
+
+// Admin - Create news
+app.post('/api/admin/content/news', authenticateAdmin, async (req, res) => {
+  const { date, title, description, image, category, link, sort_order } = req.body;
+
+  if (!title || !description) {
+    return res.status(400).json({ error: 'Titre et description requis' });
+  }
+
+  try {
+    let finalOrderIndex = sort_order;
+    if (finalOrderIndex === undefined) {
+      const countUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_news`);
+      countUrl.searchParams.append('select', 'sort_order');
+      countUrl.searchParams.append('order', 'sort_order.desc');
+      countUrl.searchParams.append('limit', '1');
+      
+      const countResponse = await fetch(countUrl.toString(), { headers: supabaseHeaders });
+      const maxItems = await countResponse.json();
+      finalOrderIndex = maxItems.length > 0 ? maxItems[0].sort_order + 1 : 0;
+    }
+
+    const newNews = {
+      date: date || new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+      title,
+      description,
+      image: image || '📰',
+      category: category || 'Actualité',
+      link: link || '#',
+      sort_order: finalOrderIndex,
+      created_at: new Date().toISOString()
+    };
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_news`, {
+      method: 'POST',
+      headers: supabaseHeaders,
+      body: JSON.stringify(newNews)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    const created = await response.json();
+    res.status(201).json(created[0] || newNews);
+
+  } catch (error) {
+    console.error('Erreur création news:', error);
+    res.status(500).json({ error: 'Erreur création actualité' });
+  }
+});
+
+// Admin - Update news
+app.patch('/api/admin/content/news/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { date, title, description, image, category, link, sort_order } = req.body;
+
+  try {
+    const updatedData = { updated_at: new Date().toISOString() };
+    if (date !== undefined) updatedData.date = date;
+    if (title !== undefined) updatedData.title = title;
+    if (description !== undefined) updatedData.description = description;
+    if (image !== undefined) updatedData.image = image;
+    if (category !== undefined) updatedData.category = category;
+    if (link !== undefined) updatedData.link = link;
+    if (sort_order !== undefined) updatedData.sort_order = sort_order;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_news`);
+    url.searchParams.append('id', `eq.${id}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify(updatedData)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({ message: 'Actualité mise à jour' });
+
+  } catch (error) {
+    console.error('Erreur update news:', error);
+    res.status(500).json({ error: 'Erreur modification actualité' });
+  }
+});
+
+// Admin - Delete news
+app.delete('/api/admin/content/news/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_news`);
+    url.searchParams.append('id', `eq.${id}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'DELETE',
+      headers: supabaseHeaders
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({ message: 'Actualité supprimée' });
+
+  } catch (error) {
+    console.error('Erreur suppression news:', error);
+    res.status(500).json({ error: 'Erreur suppression actualité' });
+  }
+});
+
+// Admin - Reorder news
+app.post('/api/admin/content/news/reorder', authenticateAdmin, async (req, res) => {
+  const { items } = req.body;
+
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: 'Items requis' });
+  }
+
+  try {
+    for (const item of items) {
+      const url = new URL(`${SUPABASE_URL}/rest/v1/crm_news`);
+      url.searchParams.append('id', `eq.${item.id}`);
+
+      await fetch(url.toString(), {
+        method: 'PATCH',
+        headers: supabaseHeaders,
+        body: JSON.stringify({ sort_order: item.sort_order })
+      });
+    }
+
+    res.json({ message: 'Ordre mis à jour' });
+
+  } catch (error) {
+    console.error('Erreur reorder:', error);
+    res.status(500).json({ error: 'Erreur réorganisation' });
   }
 });
 
@@ -1050,4 +1464,5 @@ app.listen(PORT, () => {
   console.log(`🔐 JWT activé (expire: ${JWT_EXPIRES_IN})`);
   console.log(`📊 API: http://localhost:${PORT}/api/crm`);
   console.log(`🛡️ Admin: http://localhost:${PORT}/api/admin`);
+  console.log(`📝 Content: http://localhost:${PORT}/api/content`);
 });
