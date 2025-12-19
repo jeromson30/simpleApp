@@ -28,6 +28,44 @@ const supabaseHeaders = {
 
 // ==================== HELPER: Vérifier si utilisateur suspendu ====================
 
+/**
+ * Checks if a user account is suspended, including cascading checks for owner accounts.
+ *
+ * This function performs a hierarchical suspension check:
+ * 1. Verifies if the user's own account is suspended
+ * 2. If the user is a sub-account (has an owner_id), checks if the owner account is suspended
+ * 3. Returns detailed status information about the suspension state
+ *
+ * @async
+ * @param {string} userId - The unique identifier of the user to check
+ *
+ * @returns {Promise<Object>} Suspension status object with the following properties:
+ * @returns {boolean} returns.suspended - Whether the account is suspended (directly or via owner)
+ * @returns {string} [returns.reason] - Human-readable reason for suspension (if suspended is true)
+ * @returns {boolean} [returns.notFound] - Indicates if the user was not found in the database
+ *
+ * @example
+ * // Check a regular user
+ * const result = await checkUserSuspended('user_123');
+ * // Returns: { suspended: false }
+ *
+ * @example
+ * // Check a suspended user
+ * const result = await checkUserSuspended('suspended_user');
+ * // Returns: { suspended: true, reason: 'Votre compte a été suspendu' }
+ *
+ * @example
+ * // Check a sub-account whose owner is suspended
+ * const result = await checkUserSuspended('subaccount_456');
+ * // Returns: { suspended: true, reason: 'Le compte principal a été suspendu' }
+ *
+ * @example
+ * // Check a non-existent user
+ * const result = await checkUserSuspended('nonexistent');
+ * // Returns: { suspended: false, notFound: true }
+ *
+ * @throws {Error} Logs error to console but returns { suspended: false } on failure to prevent blocking
+ */
 const checkUserSuspended = async (userId) => {
   try {
     const url = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
@@ -122,6 +160,37 @@ const optionalAuth = (req, res, next) => {
 
 // ==================== HELPERS ====================
 
+/**
+ * Generates a JSON Web Token (JWT) for user authentication.
+ *
+ * Creates a signed JWT containing user identity and authorization information.
+ * The token is used for stateless authentication across API requests and expires
+ * based on the JWT_EXPIRES_IN environment variable (default: 24h).
+ *
+ * @param {Object} user - User object from the database
+ * @param {string} user.id - Unique user identifier
+ * @param {string} user.email - User's email address
+ * @param {string} user.license - License tier (starter, pro, business, enterprise)
+ * @param {boolean} user.is_owner - Whether the user is an account owner
+ * @param {string|null} user.owner_id - ID of the owner account (null if user is owner)
+ * @param {string} user.role - User role (owner, member, admin)
+ *
+ * @returns {string} Signed JWT token string
+ *
+ * @example
+ * const user = {
+ *   id: 'user_123',
+ *   email: 'john@example.com',
+ *   license: 'pro',
+ *   is_owner: true,
+ *   owner_id: null,
+ *   role: 'owner'
+ * };
+ * const token = generateToken(user);
+ * // Returns: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *
+ * @see {@link https://jwt.io/|JWT.io} for token structure
+ */
 const generateToken = (user) => {
   return jwt.sign(
     {
@@ -137,20 +206,105 @@ const generateToken = (user) => {
   );
 };
 
+/**
+ * Hashes a plain-text password using bcrypt with a salt.
+ *
+ * Generates a cryptographically secure hash suitable for database storage.
+ * Uses bcrypt's adaptive hashing algorithm with 10 salt rounds, providing
+ * strong protection against brute-force and rainbow table attacks.
+ *
+ * @async
+ * @param {string} password - Plain-text password to hash
+ *
+ * @returns {Promise<string>} Hashed password string (60 characters, includes salt)
+ *
+ * @example
+ * const hashedPassword = await hashPassword('mySecurePassword123');
+ * // Returns: "$2a$10$N9qo8uLOickgx2ZMRZoMye1J7XmQ/UHhXiWZiMKfvELjUXwqLZqii"
+ *
+ * @throws {Error} If bcrypt operations fail
+ */
 const hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(10);
   return bcrypt.hash(password, salt);
 };
 
+/**
+ * Compares a plain-text password against a bcrypt hash.
+ *
+ * Securely validates user credentials during login by comparing the provided
+ * password against the stored hash. Uses constant-time comparison to prevent
+ * timing attacks.
+ *
+ * @async
+ * @param {string} password - Plain-text password to verify
+ * @param {string} hash - Stored bcrypt hash from database
+ *
+ * @returns {Promise<boolean>} True if password matches, false otherwise
+ *
+ * @example
+ * const isValid = await comparePassword('userInput123', storedHash);
+ * if (isValid) {
+ *   // Grant access
+ * } else {
+ *   // Deny access
+ * }
+ *
+ * @throws {Error} If bcrypt comparison fails
+ */
 const comparePassword = async (password, hash) => {
   return bcrypt.compare(password, hash);
 };
 
+/**
+ * Returns the maximum number of users allowed for a given license tier.
+ *
+ * Maps license tier identifiers to their user limits. Used for enforcing
+ * subscription boundaries when creating sub-accounts.
+ *
+ * @param {string} license - License tier identifier
+ *
+ * @returns {number} Maximum number of users (including owner)
+ * @returns {number} 1 - For 'starter' or invalid license
+ * @returns {number} 5 - For 'pro' license
+ * @returns {number} 15 - For 'business' license
+ * @returns {number} 50 - For 'enterprise' license
+ *
+ * @example
+ * const maxUsers = getLicenseMaxUsers('pro');
+ * // Returns: 5
+ *
+ * @example
+ * const maxUsers = getLicenseMaxUsers('invalid');
+ * // Returns: 1 (defaults to starter)
+ */
 const getLicenseMaxUsers = (license) => {
   const licenses = { starter: 1, pro: 5, business: 15, enterprise: 50 };
   return licenses[license] || 1;
 };
 
+/**
+ * Returns the display name for a given license tier.
+ *
+ * Converts internal license identifiers to human-readable names for UI display.
+ * Used in API responses, user interfaces, and notifications.
+ *
+ * @param {string} license - License tier identifier
+ *
+ * @returns {string} Human-readable license name
+ * @returns {string} 'Starter' - For 'starter' or invalid license
+ * @returns {string} 'Pro' - For 'pro' license
+ * @returns {string} 'Business' - For 'business' license
+ * @returns {string} 'Enterprise' - For 'enterprise' license
+ *
+ * @example
+ * const displayName = getLicenseName('business');
+ * // Returns: "Business"
+ *
+ * @example
+ * const displayName = getLicenseName('unknown');
+ * // Returns: "Starter" (defaults to starter)
+ */
 const getLicenseName = (license) => {
   const names = { starter: 'Starter', pro: 'Pro', business: 'Business', enterprise: 'Enterprise' };
   return names[license] || 'Starter';
