@@ -431,12 +431,13 @@ main, nav, footer, .banner {
 
 .crm-login-button {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.5rem;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
@@ -573,7 +574,7 @@ main, nav, footer, .banner {
   }
 }
 
-/* ===== TABS INTÉGRÉS DANS TOOLBAR ===== */
+/* ===== TABS INTï¿½GRï¿½S DANS TOOLBAR ===== */
 .crm-tabs-wrapper {
   flex: 1;
   min-width: 0;
@@ -1605,7 +1606,7 @@ main, nav, footer, .banner {
 }
 
 /* ===== STYLES PIPELINE CRM - CARTES VISIBLES ===== */
-/* Ajoutez ces styles à votre App.css */
+/* Ajoutez ces styles ï¿½ votre App.css */
 
 .crm-pipeline-grid {
   display: grid;
@@ -1681,7 +1682,7 @@ main, nav, footer, .banner {
   border: 1px dashed rgba(255, 255, 255, 0.2);
 }
 
-/* Couleurs spécifiques par colonne */
+/* Couleurs spï¿½cifiques par colonne */
 .crm-pipeline-column:nth-child(1) .crm-pipeline-card {
   border-left: 3px solid #f59e0b; /* Orange pour prospects */
 }
@@ -1701,7 +1702,7 @@ main, nav, footer, .banner {
   }
 }
 
-/* ===== STYLES CRM - LICENCES ET ÉQUIPE ===== */
+/* ===== STYLES CRM - LICENCES ET ï¿½QUIPE ===== */
 
 /* PIPELINE */
 .crm-pipeline-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1rem; min-height: 400px; }
@@ -1797,7 +1798,7 @@ main, nav, footer, .banner {
   .crm-user-banner { flex-direction: column; gap: 1rem; text-align: center; }
   .crm-team-member { flex-direction: column; text-align: center; }
   .crm-team-actions { width: 100%; justify-content: center; }
-}/* ===== STYLES CRM - LICENCES ET ÉQUIPE ===== */
+}/* ===== STYLES CRM - LICENCES ET ï¿½QUIPE ===== */
 
 /* PIPELINE */
 .crm-pipeline-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1rem; min-height: 400px; }
@@ -2924,7 +2925,7 @@ main, nav, footer, .banner {
 
 /* ============================================
    ADMIN PANEL STYLES
-   À ajouter à la fin de App.css
+   ï¿½ ajouter ï¿½ la fin de App.css
    ============================================ */
 
 /* === Login === */
@@ -3796,4 +3797,254 @@ main, nav, footer, .banner {
   .admin-search-box {
     width: 100%;
   }
+}
+
+/* ============================= */
+/* AMÃ‰LIORATIONS RESPONSIVITÃ‰ MOBILE */
+/* ============================= */
+
+/* PETIT MOBILE (< 480px) - PrioritÃ© critique */
+@media (max-width: 480px) {
+  /* RÃ©organiser grilles multi-colonnes en 1 colonne */
+  .crm-pipeline-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+
+  .crm-license-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* RÃ©duire padding des containers */
+  .admin-login-card,
+  .crm-login-card {
+    padding: 1.5rem !important;
+  }
+
+  .crm-login-container {
+    padding: 1rem !important;
+  }
+
+  /* RÃ©duire padding vertical excessif */
+  .banner {
+    padding: 1.5rem 1rem !important;
+  }
+
+  /* Augmenter zones tactiles pour les boutons */
+  .crm-btn-delete-small {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0.6rem !important;
+  }
+
+  /* Assurer zones tactiles minimales pour tous inputs */
+  input,
+  select,
+  textarea,
+  .crm-form-input,
+  .crm-form-select,
+  .crm-form-textarea {
+    min-height: 44px !important;
+  }
+
+  button,
+  .crm-button-add,
+  .crm-form-submit {
+    min-height: 44px !important;
+  }
+
+  /* Autoriser text wrapping pour Ã©viter overflow horizontal */
+  .crm-tab-button,
+  .crm-tab {
+    white-space: normal !important;
+    line-height: 1.3;
+  }
+
+  /* RÃ©duire tailles de police pour petits Ã©crans */
+  .admin-login-header h1 {
+    font-size: 1.25rem !important;
+  }
+
+  .crm-pipeline-card h4 {
+    font-size: 0.85rem !important;
+  }
+
+  /* Corriger largeurs fixes problÃ©matiques */
+  .crm-license-bar {
+    width: 100% !important;
+    max-width: 200px;
+  }
+
+  .crm-team-info {
+    min-width: 100px !important;
+  }
+
+  .crm-upgrade-option {
+    min-width: 100% !important;
+  }
+
+  /* User banner responsive */
+  .crm-user-banner {
+    padding: 0.75rem 0.5rem !important;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .crm-logout-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Tabs responsive */
+  .crm-tabs-wrapper {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .crm-tab-button {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 120px;
+    font-size: 0.875rem;
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  /* Stats grid responsive */
+  .crm-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+
+  .crm-stat-card {
+    padding: 0.75rem !important;
+  }
+
+  .crm-stat-card h3 {
+    font-size: 0.8rem !important;
+  }
+
+  .crm-stat-number {
+    font-size: 1.5rem !important;
+  }
+
+  /* Contact list responsive */
+  .crm-contact-card {
+    padding: 0.75rem !important;
+  }
+
+  .crm-contact-info h3 {
+    font-size: 0.9rem !important;
+  }
+
+  /* Team management responsive */
+  .crm-team-member {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem !important;
+  }
+
+  .crm-team-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .crm-role-select {
+    width: 100% !important;
+  }
+
+  /* Form grid responsive */
+  .crm-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Offers page responsive */
+  .crm-offers-container {
+    padding: 0 0.5rem !important;
+  }
+
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
+
+  .crm-container,
+  .crm-content {
+    overflow-x: hidden;
+  }
+}
+
+/* TABLETTE PETITE (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+  .crm-license-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .crm-pipeline-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1rem;
+  }
+
+  .crm-tabs-wrapper {
+    flex-wrap: wrap;
+  }
+
+  .crm-tab-button {
+    flex: 1 1 auto;
+    min-width: 140px;
+  }
+
+  .crm-form-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  }
+
+  /* Team actions en ligne */
+  .crm-team-member {
+    flex-wrap: wrap;
+  }
+
+  .crm-team-actions {
+    min-width: 200px;
+  }
+}
+
+/* TABLET (768px - 1023px) - Harmonisation */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .crm-pipeline-grid {
+    grid-template-columns: 2fr 1fr !important;
+  }
+
+  .admin-login-card,
+  .crm-login-card {
+    max-width: 500px;
+  }
+
+  .crm-form-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* CORRECTIONS GÃ‰NÃ‰RALES POUR TOUS Ã‰CRANS */
+
+/* Ã‰viter overflow horizontal */
+* {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Assurer que les images sont responsives */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Tables responsive avec scroll */
+.crm-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  min-width: 100%;
+}
 }

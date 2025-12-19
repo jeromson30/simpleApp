@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw, Settings } from 'lucide-react';
 import '../App.css';
 
 // Configuration API
@@ -16,35 +16,65 @@ const LICENSE_TYPES = {
 // ==================== AUTH SERVICE ====================
 
 const AuthService = {
-  // Stockage du token dans sessionStorage
-  getToken: () => sessionStorage.getItem('crm_token'),
-  
-  setToken: (token) => sessionStorage.setItem('crm_token', token),
-  
-  removeToken: () => sessionStorage.removeItem('crm_token'),
-  
+  // Déterminer quel storage utiliser (localStorage si remember me, sinon sessionStorage)
+  getStorage: () => {
+    // Vérifier d'abord dans localStorage, puis sessionStorage
+    return localStorage.getItem('crm_token') ? localStorage : sessionStorage;
+  },
+
+  // Stockage du token
+  getToken: () => {
+    return localStorage.getItem('crm_token') || sessionStorage.getItem('crm_token');
+  },
+
+  setToken: (token, remember = false) => {
+    const storage = remember ? localStorage : sessionStorage;
+    storage.setItem('crm_token', token);
+    // Si on passe à remember, on supprime de l'autre storage
+    if (remember) sessionStorage.removeItem('crm_token');
+    else localStorage.removeItem('crm_token');
+  },
+
+  removeToken: () => {
+    sessionStorage.removeItem('crm_token');
+    localStorage.removeItem('crm_token');
+  },
+
   // Stockage des infos utilisateur
   getUser: () => {
-    const user = sessionStorage.getItem('crm_user');
+    const userSession = sessionStorage.getItem('crm_user');
+    const userLocal = localStorage.getItem('crm_user');
+    const user = userLocal || userSession;
     return user ? JSON.parse(user) : null;
   },
-  
-  setUser: (user) => sessionStorage.setItem('crm_user', JSON.stringify(user)),
-  
-  removeUser: () => sessionStorage.removeItem('crm_user'),
-  
+
+  setUser: (user, remember = false) => {
+    const storage = remember ? localStorage : sessionStorage;
+    storage.setItem('crm_user', JSON.stringify(user));
+    // Si on passe à remember, on supprime de l'autre storage
+    if (remember) sessionStorage.removeItem('crm_user');
+    else localStorage.removeItem('crm_user');
+  },
+
+  removeUser: () => {
+    sessionStorage.removeItem('crm_user');
+    localStorage.removeItem('crm_user');
+  },
+
   // Clear all auth data
   clearAuth: () => {
     sessionStorage.removeItem('crm_token');
     sessionStorage.removeItem('crm_user');
+    localStorage.removeItem('crm_token');
+    localStorage.removeItem('crm_user');
   },
-  
+
   // Vérifier si connecté
-  isAuthenticated: () => !!sessionStorage.getItem('crm_token'),
-  
+  isAuthenticated: () => !!(localStorage.getItem('crm_token') || sessionStorage.getItem('crm_token')),
+
   // Headers avec token
   getAuthHeaders: () => {
-    const token = sessionStorage.getItem('crm_token');
+    const token = localStorage.getItem('crm_token') || sessionStorage.getItem('crm_token');
     return {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })
@@ -258,6 +288,7 @@ export function CRM({ onLogin, onLogout }) {
   const [selectedLicense, setSelectedLicense] = useState('starter');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [suspendedMessage, setSuspendedMessage] = useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Company info for registration
   const [companyName, setCompanyName] = useState('');
@@ -530,10 +561,10 @@ export function CRM({ onLogin, onLogout }) {
         throw new Error(data.error || 'Erreur connexion');
       }
 
-      // Stocker le token et l'utilisateur
-      AuthService.setToken(data.token);
-      AuthService.setUser(data.user);
-      
+      // Stocker le token et l'utilisateur (avec remember me si coché)
+      AuthService.setToken(data.token, rememberMe);
+      AuthService.setUser(data.user, rememberMe);
+
       setCurrentUser(data.user);
       if (onLogin) onLogin(data.user);
       
@@ -1354,6 +1385,12 @@ export function CRM({ onLogin, onLogout }) {
                 <span className={`crm-role-badge crm-role-${account.role}`}>
                   {account.role === 'admin' ? 'Admin' : account.role === 'manager' ? 'Manager' : 'Membre'}
                 </span>
+                {currentUser.isOwner && account.last_login_at && (
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem' }}>
+                    <div>Dernière connexion : {new Date(account.last_login_at).toLocaleString('fr-FR')}</div>
+                    {account.last_login_ip && <div>IP : {account.last_login_ip}</div>}
+                  </div>
+                )}
               </div>
               {currentUser.isOwner && (
                 <div className="crm-team-actions">
@@ -1464,6 +1501,15 @@ export function CRM({ onLogin, onLogout }) {
                   <input type="password" placeholder="Mot de passe" value={password}
                     onChange={(e) => setPassword(e.target.value)} className="crm-login-input"
                     onKeyPress={(e) => e.key === 'Enter' && handleLogin(e)} />
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                    />
+                    <span>Se souvenir de moi</span>
+                  </label>
                   <button onClick={handleLogin} disabled={loading} className="crm-login-button">
                     {loading ? 'Connexion...' : 'Se connecter'}
                   </button>
@@ -1552,15 +1598,6 @@ export function CRM({ onLogin, onLogout }) {
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="crm-stats-grid">
-          <div className="crm-stat-card"><h3>Total</h3><p className="crm-stat-number">{stats.total}</p></div>
-          <div className="crm-stat-card"><h3>Prospects</h3><p className="crm-stat-number">{stats.prospects}</p></div>
-          <div className="crm-stat-card"><h3>Clients</h3><p className="crm-stat-number">{stats.clients}</p></div>
-          <div className="crm-stat-card"><h3>Perdus</h3><p className="crm-stat-number">{stats.lost}</p></div>
-          <div className="crm-stat-card"><h3>Conversion</h3><p className="crm-stat-number">{stats.conversionRate}%</p></div>
-        </div>
-
         {/* Tabs */}
         <div className="crm-tabs-wrapper">
           <button onClick={() => setActiveTab('contacts')}
@@ -1571,8 +1608,10 @@ export function CRM({ onLogin, onLogout }) {
             className={`crm-tab-button ${activeTab === 'pipeline' ? 'active' : ''}`}>🎯 Pipeline</button>
           <button onClick={() => setActiveTab('interactions')}
             className={`crm-tab-button ${activeTab === 'interactions' ? 'active' : ''}`}>💬 Interactions</button>
+          <button onClick={() => setActiveTab('offers')}
+            className={`crm-tab-button ${activeTab === 'offers' ? 'active' : ''}`}>🎁 Offres</button>
           <button onClick={() => setActiveTab('team')}
-            className={`crm-tab-button ${activeTab === 'team' ? 'active' : ''}`}>👥 Équipe</button>
+            className={`crm-tab-button ${activeTab === 'team' ? 'active' : ''}`}><Settings size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Administration</button>
         </div>
 
         {/* Contacts Tab */}
@@ -2025,6 +2064,184 @@ export function CRM({ onLogin, onLogout }) {
               </div>
             </div>
           </>
+        )}
+
+        {/* Offers Tab */}
+        {activeTab === 'offers' && (
+          <div className="crm-offers-container" style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', background: 'linear-gradient(135deg, #64c8ff, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Nos Offres d'Abonnement
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>
+                Choisissez l'offre qui correspond le mieux à vos besoins
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+              {Object.entries(LICENSE_TYPES).map(([key, license]) => (
+                <div key={key} style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  borderRadius: '16px',
+                  padding: '2rem',
+                  border: `2px solid ${currentUser.license === key ? license.color : 'rgba(255,255,255,0.1)'}`,
+                  boxShadow: currentUser.license === key ? `0 8px 32px ${license.color}40` : '0 4px 16px rgba(0,0,0,0.2)',
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  transform: currentUser.license === key ? 'scale(1.05)' : 'scale(1)',
+                }}>
+                  {currentUser.license === key && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-12px',
+                      right: '20px',
+                      background: license.color,
+                      color: 'white',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '20px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                    }}>
+                      Votre offre actuelle
+                    </div>
+                  )}
+
+                  <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                    <div style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '50%',
+                      background: `${license.color}20`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 1rem',
+                      border: `2px solid ${license.color}`
+                    }}>
+                      <Crown size={30} color={license.color} />
+                    </div>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: license.color, marginBottom: '0.5rem' }}>
+                      {license.name}
+                    </h3>
+                    <p style={{ fontSize: '2rem', fontWeight: '700', color: 'white', marginBottom: '0.25rem' }}>
+                      {license.price}
+                    </p>
+                  </div>
+
+                  <ul style={{ listStyle: 'none', padding: 0, marginBottom: '2rem' }}>
+                    <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Users size={18} color={license.color} />
+                      <span>{license.maxUsers} utilisateur{license.maxUsers > 1 ? 's' : ''}</span>
+                    </li>
+                    <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>✓</span>
+                      <span>Gestion des contacts illimitée</span>
+                    </li>
+                    <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>✓</span>
+                      <span>Création de devis</span>
+                    </li>
+                    <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>✓</span>
+                      <span>Export PDF des devis</span>
+                    </li>
+                    {key !== 'starter' && (
+                      <>
+                        <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>✓</span>
+                          <span>Support prioritaire</span>
+                        </li>
+                        <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>✓</span>
+                          <span>Statistiques avancées</span>
+                        </li>
+                      </>
+                    )}
+                    {(key === 'business' || key === 'enterprise') && (
+                      <>
+                        <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>✓</span>
+                          <span>Intégrations API</span>
+                        </li>
+                        <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>✓</span>
+                          <span>Personnalisation avancée</span>
+                        </li>
+                      </>
+                    )}
+                    {key === 'enterprise' && (
+                      <li style={{ padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>✓</span>
+                        <span>Support dédié 24/7</span>
+                      </li>
+                    )}
+                  </ul>
+
+                  {currentUser.license !== key && (
+                    <button
+                      style={{
+                        width: '100%',
+                        padding: '1rem',
+                        background: `linear-gradient(135deg, ${license.color}, ${license.color}dd)`,
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                      }}
+                      onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                      onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                    >
+                      Passer à {license.name}
+                    </button>
+                  )}
+                  {currentUser.license === key && (
+                    <div style={{
+                      width: '100%',
+                      padding: '1rem',
+                      background: 'rgba(16, 185, 129, 0.2)',
+                      color: '#10b981',
+                      border: '1px solid #10b981',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      textAlign: 'center',
+                    }}>
+                      Offre actuelle
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '12px',
+              padding: '2rem',
+              textAlign: 'center',
+              marginTop: '3rem'
+            }}>
+              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#64c8ff' }}>
+                Besoin d'une offre sur mesure ?
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem' }}>
+                Contactez-nous pour une solution personnalisée adaptée à vos besoins spécifiques
+              </p>
+              <button style={{
+                padding: '1rem 2rem',
+                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}>
+                Nous contacter
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Team Tab */}
