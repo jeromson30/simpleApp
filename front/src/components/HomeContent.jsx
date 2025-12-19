@@ -86,11 +86,11 @@ const DEFAULT_NEWS = [
   {
     id: 3,
     date: '5 Décembre 2024',
-    title: 'Stats Battlefield 6 Intégrées',
-    description: 'Consultez vos statistiques Battlefield 6 directement depuis la page Stats de l\'application.',
-    image: '🎮',
-    category: 'Intégration',
-    link: '#'
+    title: 'Nouvelles Offres d\'Abonnement',
+    description: 'Découvrez nos 4 plans d\'abonnement CRM adaptés à tous les besoins, du Starter gratuit à l\'Enterprise.',
+    image: '💎',
+    category: 'Offres',
+    link: '/stats'
   },
   {
     id: 4,

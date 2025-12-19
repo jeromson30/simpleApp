@@ -9,7 +9,7 @@ const LICENSE_TYPES = {
 };
 
 // Composant pour la page Offres
-export function StatsContent() {
+export function OffersContent() {
   return (
     <main className="main-content" style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 1rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>

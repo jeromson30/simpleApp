@@ -12,7 +12,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
       case '/':
         return 'Accueil';
       case '/stats':
-        return 'Statistiques';
+        return 'Offres';
       case '/contact':
         return 'Contact';
       case '/crm':
@@ -41,7 +41,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
           
           <div className="desktop-menu">
             <a href="/">Accueil</a>
-            <a href="/stats">Stats</a>
+            <a href="/stats">Offres</a>
             <a href="/contact">Contact</a>
             <a href="/crm" className="nav-crm-btn" title="Accès CRM">
               <Lock size={18} />
@@ -92,7 +92,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
       {menuOpen && (
         <div className="mobile-menu">
           <a href="/">Accueil</a>
-          <a href="/stats">Stats</a>
+          <a href="/stats">Offres</a>
           <a href="/contact">Contact</a>
           <a href="/crm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Lock size={18} /> CRM
@@ -101,7 +101,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
             <Shield size={18} /> Admin
           </a>
           {currentUser && (
-            <button 
+            <button
               className="mobile-logout-btn"
               onClick={handleLogout}
             >
@@ -115,7 +115,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
         <div className="banner">
           <div className="banner-container">
             <h2 className="banner-title">{title}</h2>
-            <p className="banner-subtitle">Découvrez vos statistiques Battlefield 6</p>
+            <p className="banner-subtitle">Découvrez nos offres d'abonnement CRM adaptées à vos besoins</p>
           </div>
         </div>
       )}
