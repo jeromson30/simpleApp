@@ -487,6 +487,29 @@ app.post('/api/crm/auth/login', async (req, res) => {
       }
     }
 
+    // Récupérer l'IP du client
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+                     req.headers['x-real-ip'] ||
+                     req.connection?.remoteAddress ||
+                     req.socket?.remoteAddress ||
+                     'unknown';
+
+    // Mettre à jour last_login_ip et last_login_at
+    try {
+      const updateUrl = `${SUPABASE_URL}/rest/v1/crm_users?id=eq.${user.id}`;
+      await fetch(updateUrl, {
+        method: 'PATCH',
+        headers: supabaseHeaders,
+        body: JSON.stringify({
+          last_login_ip: clientIp,
+          last_login_at: new Date().toISOString()
+        })
+      });
+    } catch (updateError) {
+      console.error('Erreur mise à jour login info:', updateError);
+      // Ne pas bloquer la connexion si la mise à jour échoue
+    }
+
     // Générer le token JWT
     const token = generateToken({
       ...user,
@@ -670,7 +693,7 @@ app.get('/api/crm/subaccounts', authenticateToken, async (req, res) => {
 
     const url = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
     url.searchParams.append('owner_id', `eq.${ownerId}`);
-    url.searchParams.append('select', 'id,email,role,suspended,created_at');
+    url.searchParams.append('select', 'id,email,role,suspended,created_at,last_login_ip,last_login_at');
     url.searchParams.append('order', 'created_at.desc');
 
     const response = await fetch(url.toString(), { headers: supabaseHeaders });
