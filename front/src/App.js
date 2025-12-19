@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Header } from './components/Header';
 import { ContactContent } from './components/ContactContent';
 import { HomeContent } from './components/HomeContent';
-import { StatsContent } from './components/StatsContent';
+import { OffersContent } from './components/OffersContent';
 import { CRM } from './pages/crm';
 import AdminPanel from './pages/AdminPanel';
 import './App.css';
@@ -269,9 +269,9 @@ function AppContent() {
           path="/" 
           element={<HomeContent data={data} loading={loading} nom={nom} setNom={setNom} handleSubmit={handleSubmit} />} 
         />
-        <Route 
-          path="/stats" 
-          element={<StatsContent bfStats={bfStats} loadingBf={loadingBf} />} 
+        <Route
+          path="/stats"
+          element={<OffersContent />}
         />
         <Route 
           path="/contact" 
