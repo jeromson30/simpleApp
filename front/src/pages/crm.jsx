@@ -270,6 +270,16 @@ export function CRM({ onLogin, onLogout }) {
   const [subAccounts, setSubAccounts] = useState([]);
   const [showSubAccountForm, setShowSubAccountForm] = useState(false);
   const [newSubAccount, setNewSubAccount] = useState({ email: '', password: '', role: 'member' });
+
+  // Company info management states
+  const [showCompanyForm, setShowCompanyForm] = useState(false);
+  const [companyFormData, setCompanyFormData] = useState({
+    company_name: '',
+    company_siret: '',
+    company_address: '',
+    company_phone: '',
+    company_email: ''
+  });
   
   // CRM states
   const [contacts, setContacts] = useState([]);
@@ -352,6 +362,19 @@ export function CRM({ onLogin, onLogout }) {
 
     checkAuth();
   }, [onLogin]);
+
+  // Initialize company form data when user changes
+  useEffect(() => {
+    if (currentUser) {
+      setCompanyFormData({
+        company_name: currentUser.companyName || '',
+        company_siret: currentUser.companySiret || '',
+        company_address: currentUser.companyAddress || '',
+        company_phone: currentUser.companyPhone || '',
+        company_email: currentUser.companyEmail || ''
+      });
+    }
+  }, [currentUser]);
 
   // ==================== LOAD DATA ====================
 
@@ -1128,15 +1151,6 @@ export function CRM({ onLogin, onLogout }) {
     const license = LICENSE_TYPES[currentUser.license] || LICENSE_TYPES.starter;
     const usedSlots = subAccounts.length + 1;
     const availableSlots = currentUser.maxUsers - usedSlots;
-
-    const [showCompanyForm, setShowCompanyForm] = React.useState(false);
-    const [companyFormData, setCompanyFormData] = React.useState({
-      company_name: currentUser.companyName || '',
-      company_siret: currentUser.companySiret || '',
-      company_address: currentUser.companyAddress || '',
-      company_phone: currentUser.companyPhone || '',
-      company_email: currentUser.companyEmail || ''
-    });
 
     const handleUpdateCompany = async () => {
       if (!companyFormData.company_name || !companyFormData.company_siret || !companyFormData.company_address || !companyFormData.company_phone || !companyFormData.company_email) {
