@@ -270,7 +270,7 @@ function AppContent() {
           element={<HomeContent data={data} loading={loading} nom={nom} setNom={setNom} handleSubmit={handleSubmit} />} 
         />
         <Route
-          path="/stats"
+          path="/offers"
           element={<OffersContent />}
         />
         <Route 

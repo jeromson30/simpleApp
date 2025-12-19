@@ -11,7 +11,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
     switch(path) {
       case '/':
         return 'Accueil';
-      case '/stats':
+      case '/offers':
         return 'Offres';
       case '/contact':
         return 'Contact';
@@ -41,7 +41,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
           
           <div className="desktop-menu">
             <a href="/">Accueil</a>
-            <a href="/stats">Offres</a>
+            <a href="/offers">Offres</a>
             <a href="/contact">Contact</a>
             <a href="/crm" className="nav-crm-btn" title="Accès CRM">
               <Lock size={18} />
@@ -92,7 +92,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
       {menuOpen && (
         <div className="mobile-menu">
           <a href="/">Accueil</a>
-          <a href="/stats">Offres</a>
+          <a href="/offers">Offres</a>
           <a href="/contact">Contact</a>
           <a href="/crm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Lock size={18} /> CRM
