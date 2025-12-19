@@ -414,10 +414,11 @@ export function CRM({ onLogin, onLogout }) {
       const response = await ApiService.getContacts();
       if (response.ok) {
         const data = await response.json();
-        setContacts(data);
+        setContacts(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Erreur chargement contacts:', error);
+      setContacts([]);
     }
   }, []);
 
@@ -426,10 +427,11 @@ export function CRM({ onLogin, onLogout }) {
       const response = await ApiService.getInteractions();
       if (response.ok) {
         const data = await response.json();
-        setInteractions(data);
+        setInteractions(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Erreur chargement interactions:', error);
+      setInteractions([]);
     }
   }, []);
 
@@ -438,10 +440,11 @@ export function CRM({ onLogin, onLogout }) {
       const response = await ApiService.getSubAccounts();
       if (response.ok) {
         const data = await response.json();
-        setSubAccounts(data);
+        setSubAccounts(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Erreur chargement sous-comptes:', error);
+      setSubAccounts([]);
     }
   }, []);
 
@@ -450,6 +453,11 @@ export function CRM({ onLogin, onLogout }) {
       const response = await ApiService.getQuotes();
       if (response.ok) {
         const data = await response.json();
+        // Ensure data is an array
+        if (!Array.isArray(data)) {
+          setQuotes([]);
+          return;
+        }
         // Parse items if they are strings
         const parsedData = data.map(quote => ({
           ...quote,
@@ -459,6 +467,7 @@ export function CRM({ onLogin, onLogout }) {
       }
     } catch (error) {
       console.error('Erreur chargement devis:', error);
+      setQuotes([]);
     }
   }, []);
 
