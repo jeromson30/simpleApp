@@ -314,7 +314,7 @@ const getLicenseName = (license) => {
 
 // Inscription
 app.post('/api/crm/auth/register', async (req, res) => {
-  const { email, password, license } = req.body;
+  const { email, password, license, company_name, company_siret, company_address, company_phone, company_email } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email et password requis' });
@@ -322,6 +322,11 @@ app.post('/api/crm/auth/register', async (req, res) => {
 
   if (password.length < 6) {
     return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
+  }
+
+  // Vérification des champs entreprise obligatoires
+  if (!company_name || !company_siret || !company_address || !company_phone || !company_email) {
+    return res.status(400).json({ error: 'Toutes les informations de l\'entreprise sont requises (nom, SIRET, adresse, téléphone, email)' });
   }
 
   try {
@@ -350,7 +355,12 @@ app.post('/api/crm/auth/register', async (req, res) => {
       is_owner: true,
       owner_id: null,
       role: 'owner',
-      suspended: false, // ✅ Nouveau compte = non suspendu
+      suspended: false,
+      company_name,
+      company_siret,
+      company_address,
+      company_phone,
+      company_email,
       created_at: new Date().toISOString()
     };
 
@@ -381,7 +391,12 @@ app.post('/api/crm/auth/register', async (req, res) => {
         maxUsers: getLicenseMaxUsers(user.license),
         isOwner: user.is_owner,
         ownerId: user.owner_id,
-        role: user.role
+        role: user.role,
+        companyName: user.company_name,
+        companySiret: user.company_siret,
+        companyAddress: user.company_address,
+        companyPhone: user.company_phone,
+        companyEmail: user.company_email
       }
     });
 
@@ -428,16 +443,24 @@ app.post('/api/crm/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Identifiants invalides' });
     }
 
-    // Si c'est un sous-compte, vérifier si le propriétaire est suspendu
+    // Si c'est un sous-compte, vérifier si le propriétaire est suspendu et récupérer ses infos
     let licenseInfo = {
       license: user.license,
       maxUsers: getLicenseMaxUsers(user.license)
     };
 
+    let companyInfo = {
+      companyName: user.company_name,
+      companySiret: user.company_siret,
+      companyAddress: user.company_address,
+      companyPhone: user.company_phone,
+      companyEmail: user.company_email
+    };
+
     if (!user.is_owner && user.owner_id) {
       const ownerUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
       ownerUrl.searchParams.append('id', `eq.${user.owner_id}`);
-      ownerUrl.searchParams.append('select', 'license,suspended');
+      ownerUrl.searchParams.append('select', 'license,suspended,company_name,company_siret,company_address,company_phone,company_email');
 
       const ownerResponse = await fetch(ownerUrl.toString(), { headers: supabaseHeaders });
       const owners = await ownerResponse.json();
@@ -445,13 +468,22 @@ app.post('/api/crm/auth/login', async (req, res) => {
       if (owners && owners.length > 0) {
         // ✅ NOUVEAU: Vérifier si le propriétaire est suspendu
         if (owners[0].suspended) {
-          return res.status(403).json({ 
+          return res.status(403).json({
             error: 'Le compte principal a été suspendu. Contactez l\'administrateur.',
             code: 'OWNER_SUSPENDED'
           });
         }
         licenseInfo.license = owners[0].license;
         licenseInfo.maxUsers = getLicenseMaxUsers(owners[0].license);
+
+        // Récupérer les infos entreprise du propriétaire
+        companyInfo = {
+          companyName: owners[0].company_name,
+          companySiret: owners[0].company_siret,
+          companyAddress: owners[0].company_address,
+          companyPhone: owners[0].company_phone,
+          companyEmail: owners[0].company_email
+        };
       }
     }
 
@@ -471,7 +503,12 @@ app.post('/api/crm/auth/login', async (req, res) => {
         maxUsers: licenseInfo.maxUsers,
         isOwner: user.is_owner,
         ownerId: user.owner_id,
-        role: user.role
+        role: user.role,
+        companyName: companyInfo.companyName,
+        companySiret: companyInfo.companySiret,
+        companyAddress: companyInfo.companyAddress,
+        companyPhone: companyInfo.companyPhone,
+        companyEmail: companyInfo.companyEmail
       }
     });
 
@@ -505,27 +542,41 @@ app.get('/api/crm/auth/me', authenticateToken, async (req, res) => {
       });
     }
 
-    // Récupérer la licence effective
+    // Récupérer la licence effective et les infos entreprise
     let license = user.license;
     let maxUsers = getLicenseMaxUsers(license);
+    let companyInfo = {
+      companyName: user.company_name,
+      companySiret: user.company_siret,
+      companyAddress: user.company_address,
+      companyPhone: user.company_phone,
+      companyEmail: user.company_email
+    };
 
     if (!user.is_owner && user.owner_id) {
       const ownerUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
       ownerUrl.searchParams.append('id', `eq.${user.owner_id}`);
-      ownerUrl.searchParams.append('select', 'license,suspended');
+      ownerUrl.searchParams.append('select', 'license,suspended,company_name,company_siret,company_address,company_phone,company_email');
 
       const ownerResponse = await fetch(ownerUrl.toString(), { headers: supabaseHeaders });
       const owners = await ownerResponse.json();
 
       if (owners && owners.length > 0) {
         if (owners[0].suspended) {
-          return res.status(403).json({ 
+          return res.status(403).json({
             error: 'Le compte principal a été suspendu',
             code: 'OWNER_SUSPENDED'
           });
         }
         license = owners[0].license;
         maxUsers = getLicenseMaxUsers(license);
+        companyInfo = {
+          companyName: owners[0].company_name,
+          companySiret: owners[0].company_siret,
+          companyAddress: owners[0].company_address,
+          companyPhone: owners[0].company_phone,
+          companyEmail: owners[0].company_email
+        };
       }
     }
 
@@ -537,7 +588,12 @@ app.get('/api/crm/auth/me', authenticateToken, async (req, res) => {
       maxUsers,
       isOwner: user.is_owner,
       ownerId: user.owner_id,
-      role: user.role
+      role: user.role,
+      companyName: companyInfo.companyName,
+      companySiret: companyInfo.companySiret,
+      companyAddress: companyInfo.companyAddress,
+      companyPhone: companyInfo.companyPhone,
+      companyEmail: companyInfo.companyEmail
     });
 
   } catch (error) {
@@ -555,6 +611,54 @@ app.post('/api/crm/auth/refresh', authenticateToken, async (req, res) => {
     res.json({ token: newToken });
   } catch (error) {
     res.status(500).json({ error: 'Erreur rafraîchissement token' });
+  }
+});
+
+// Mettre à jour les informations de l'entreprise
+app.patch('/api/crm/auth/company', authenticateToken, async (req, res) => {
+  const { company_name, company_siret, company_address, company_phone, company_email } = req.body;
+
+  if (!req.user.isOwner) {
+    return res.status(403).json({ error: 'Seul le propriétaire peut modifier les informations de l\'entreprise' });
+  }
+
+  if (!company_name || !company_siret || !company_address || !company_phone || !company_email) {
+    return res.status(400).json({ error: 'Toutes les informations de l\'entreprise sont requises' });
+  }
+
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_users`);
+    url.searchParams.append('id', `eq.${req.user.id}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify({
+        company_name,
+        company_siret,
+        company_address,
+        company_phone,
+        company_email,
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({
+      message: 'Informations de l\'entreprise mises à jour',
+      companyName: company_name,
+      companySiret: company_siret,
+      companyAddress: company_address,
+      companyPhone: company_phone,
+      companyEmail: company_email
+    });
+
+  } catch (error) {
+    console.error('Erreur mise à jour entreprise:', error);
+    res.status(500).json({ error: 'Erreur mise à jour des informations de l\'entreprise' });
   }
 });
 

@@ -257,7 +257,14 @@ export function CRM({ onLogin, onLogout }) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [selectedLicense, setSelectedLicense] = useState('starter');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [suspendedMessage, setSuspendedMessage] = useState(null); // ✅ NOUVEAU
+  const [suspendedMessage, setSuspendedMessage] = useState(null);
+
+  // Company info for registration
+  const [companyName, setCompanyName] = useState('');
+  const [companySiret, setCompanySiret] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
   
   // Sub-accounts states
   const [subAccounts, setSubAccounts] = useState([]);
@@ -426,9 +433,28 @@ export function CRM({ onLogin, onLogout }) {
       return;
     }
 
+    if (!companyName || !companySiret || !companyAddress || !companyPhone || !companyEmail) {
+      alert('Toutes les informations de l\'entreprise sont requises');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await ApiService.register(email, password, selectedLicense);
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          license: selectedLicense,
+          company_name: companyName,
+          company_siret: companySiret,
+          company_address: companyAddress,
+          company_phone: companyPhone,
+          company_email: companyEmail
+        })
+      });
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -438,12 +464,17 @@ export function CRM({ onLogin, onLogout }) {
       // Stocker le token et l'utilisateur
       AuthService.setToken(data.token);
       AuthService.setUser(data.user);
-      
+
       setCurrentUser(data.user);
       if (onLogin) onLogin(data.user);
-      
+
       setEmail('');
       setPassword('');
+      setCompanyName('');
+      setCompanySiret('');
+      setCompanyAddress('');
+      setCompanyPhone('');
+      setCompanyEmail('');
       setIsRegistering(false);
 
     } catch (error) {
@@ -863,6 +894,208 @@ export function CRM({ onLogin, onLogout }) {
     document.body.removeChild(element);
   };
 
+  const generateQuotePDF = (quote) => {
+    // Créer une nouvelle fenêtre pour l'impression
+    const printWindow = window.open('', '', 'width=800,height=600');
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Devis ${quote.quote_number}</title>
+        <style>
+          @media print {
+            @page { margin: 2cm; }
+          }
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 20px;
+          }
+          .company-info h1 {
+            color: #3b82f6;
+            margin: 0 0 10px 0;
+            font-size: 24px;
+          }
+          .company-info p {
+            margin: 3px 0;
+            font-size: 13px;
+          }
+          .quote-info {
+            text-align: right;
+          }
+          .quote-info h2 {
+            color: #3b82f6;
+            margin: 0 0 10px 0;
+          }
+          .quote-info p {
+            margin: 3px 0;
+            font-size: 13px;
+          }
+          .client-info {
+            margin: 30px 0;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+          }
+          .client-info h3 {
+            margin: 0 0 10px 0;
+            color: #3b82f6;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+          }
+          th {
+            background: #3b82f6;
+            color: white;
+            padding: 12px;
+            text-align: left;
+          }
+          td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          tr:hover {
+            background: #f8f9fa;
+          }
+          .totals {
+            margin: 30px 0;
+            text-align: right;
+          }
+          .totals table {
+            margin-left: auto;
+            width: 300px;
+          }
+          .totals td {
+            padding: 8px 12px;
+          }
+          .totals .total-row {
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+          }
+          .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            font-size: 12px;
+            color: #6b7280;
+          }
+          .notes {
+            margin: 30px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #3b82f6;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-info">
+            <h1>${currentUser.companyName || 'Entreprise'}</h1>
+            <p><strong>SIRET:</strong> ${currentUser.companySiret || ''}</p>
+            <p>${currentUser.companyAddress || ''}</p>
+            <p><strong>Tél:</strong> ${currentUser.companyPhone || ''}</p>
+            <p><strong>Email:</strong> ${currentUser.companyEmail || ''}</p>
+          </div>
+          <div class="quote-info">
+            <h2>DEVIS</h2>
+            <p><strong>N° ${quote.quote_number}</strong></p>
+            <p>Date: ${new Date().toLocaleDateString('fr-FR')}</p>
+            ${quote.valid_until ? `<p>Valide jusqu'au: ${new Date(quote.valid_until).toLocaleDateString('fr-FR')}</p>` : ''}
+          </div>
+        </div>
+
+        <div class="client-info">
+          <h3>Client</h3>
+          <p><strong>${quote.client_name}</strong></p>
+          ${quote.client_email ? `<p>Email: ${quote.client_email}</p>` : ''}
+          ${quote.client_address ? `<p>${quote.client_address}</p>` : ''}
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th style="width: 100px; text-align: center;">Quantité</th>
+              <th style="width: 120px; text-align: right;">Prix unitaire</th>
+              <th style="width: 120px; text-align: right;">Total HT</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${quote.items.map(item => `
+              <tr>
+                <td>${item.description}</td>
+                <td style="text-align: center;">${item.quantity}</td>
+                <td style="text-align: right;">${item.unit_price.toFixed(2)}€</td>
+                <td style="text-align: right;">${item.total.toFixed(2)}€</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <table>
+            <tr>
+              <td>Sous-total HT:</td>
+              <td style="text-align: right;"><strong>${quote.subtotal.toFixed(2)}€</strong></td>
+            </tr>
+            <tr>
+              <td>TVA (${quote.tax_rate}%):</td>
+              <td style="text-align: right;"><strong>${quote.tax_amount.toFixed(2)}€</strong></td>
+            </tr>
+            <tr class="total-row">
+              <td>TOTAL TTC:</td>
+              <td style="text-align: right;">${quote.total.toFixed(2)}€</td>
+            </tr>
+          </table>
+        </div>
+
+        ${quote.payment_terms ? `
+          <div class="notes">
+            <strong>Conditions de paiement:</strong><br>
+            ${quote.payment_terms}
+          </div>
+        ` : ''}
+
+        ${quote.notes ? `
+          <div class="notes">
+            <strong>Notes:</strong><br>
+            ${quote.notes}
+          </div>
+        ` : ''}
+
+        <div class="footer">
+          <p>Ce devis est valable ${quote.valid_until ? `jusqu'au ${new Date(quote.valid_until).toLocaleDateString('fr-FR')}` : '30 jours'}.</p>
+          <p>${currentUser.companyName} - ${currentUser.companySiret ? `SIRET: ${currentUser.companySiret}` : ''}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    // Attendre que le contenu soit chargé avant d'imprimer
+    printWindow.onload = () => {
+      printWindow.print();
+      setTimeout(() => printWindow.close(), 100);
+    };
+  };
+
   // ==================== RENDER HELPERS ====================
 
   const renderPipeline = () => {
@@ -896,8 +1129,148 @@ export function CRM({ onLogin, onLogout }) {
     const usedSlots = subAccounts.length + 1;
     const availableSlots = currentUser.maxUsers - usedSlots;
 
+    const [showCompanyForm, setShowCompanyForm] = React.useState(false);
+    const [companyFormData, setCompanyFormData] = React.useState({
+      company_name: currentUser.companyName || '',
+      company_siret: currentUser.companySiret || '',
+      company_address: currentUser.companyAddress || '',
+      company_phone: currentUser.companyPhone || '',
+      company_email: currentUser.companyEmail || ''
+    });
+
+    const handleUpdateCompany = async () => {
+      if (!companyFormData.company_name || !companyFormData.company_siret || !companyFormData.company_address || !companyFormData.company_phone || !companyFormData.company_email) {
+        alert('Tous les champs sont requis');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE}/auth/company`, {
+          method: 'PATCH',
+          headers: AuthService.getAuthHeaders(),
+          body: JSON.stringify(companyFormData)
+        });
+
+        if (response.ok) {
+          const updatedUser = {
+            ...currentUser,
+            companyName: companyFormData.company_name,
+            companySiret: companyFormData.company_siret,
+            companyAddress: companyFormData.company_address,
+            companyPhone: companyFormData.company_phone,
+            companyEmail: companyFormData.company_email
+          };
+          setCurrentUser(updatedUser);
+          AuthService.setUser(updatedUser);
+          setShowCompanyForm(false);
+          alert('Informations de l\'entreprise mises à jour');
+        } else {
+          const data = await response.json();
+          throw new Error(data.error || 'Erreur mise à jour');
+        }
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     return (
       <div className="crm-team-container">
+        {/* Section informations entreprise */}
+        {currentUser.isOwner && (
+          <div className="crm-form-container" style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 className="crm-form-title">Informations de l'entreprise</h3>
+              <button
+                className="crm-button-add"
+                onClick={() => setShowCompanyForm(!showCompanyForm)}
+              >
+                <Edit2 size={18} /> <span>Modifier</span>
+              </button>
+            </div>
+
+            {!showCompanyForm ? (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '1rem',
+                padding: '1rem',
+                background: 'rgba(255,255,255,0.03)',
+                borderRadius: '8px'
+              }}>
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Nom de l'entreprise</p>
+                  <p style={{ color: 'white', fontWeight: '500' }}>{currentUser.companyName || 'Non renseigné'}</p>
+                </div>
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>SIRET</p>
+                  <p style={{ color: 'white', fontWeight: '500' }}>{currentUser.companySiret || 'Non renseigné'}</p>
+                </div>
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Adresse</p>
+                  <p style={{ color: 'white', fontWeight: '500' }}>{currentUser.companyAddress || 'Non renseigné'}</p>
+                </div>
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Téléphone</p>
+                  <p style={{ color: 'white', fontWeight: '500' }}>{currentUser.companyPhone || 'Non renseigné'}</p>
+                </div>
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Email</p>
+                  <p style={{ color: 'white', fontWeight: '500' }}>{currentUser.companyEmail || 'Non renseigné'}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="crm-form-grid">
+                <input
+                  type="text"
+                  placeholder="Nom de l'entreprise*"
+                  value={companyFormData.company_name}
+                  onChange={(e) => setCompanyFormData({ ...companyFormData, company_name: e.target.value })}
+                  className="crm-form-input"
+                />
+                <input
+                  type="text"
+                  placeholder="SIRET*"
+                  value={companyFormData.company_siret}
+                  onChange={(e) => setCompanyFormData({ ...companyFormData, company_siret: e.target.value })}
+                  className="crm-form-input"
+                />
+                <input
+                  type="text"
+                  placeholder="Adresse*"
+                  value={companyFormData.company_address}
+                  onChange={(e) => setCompanyFormData({ ...companyFormData, company_address: e.target.value })}
+                  className="crm-form-input"
+                />
+                <input
+                  type="tel"
+                  placeholder="Téléphone*"
+                  value={companyFormData.company_phone}
+                  onChange={(e) => setCompanyFormData({ ...companyFormData, company_phone: e.target.value })}
+                  className="crm-form-input"
+                />
+                <input
+                  type="email"
+                  placeholder="Email*"
+                  value={companyFormData.company_email}
+                  onChange={(e) => setCompanyFormData({ ...companyFormData, company_email: e.target.value })}
+                  className="crm-form-input"
+                />
+                <div className="crm-form-actions" style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem' }}>
+                  <button onClick={handleUpdateCompany} className="crm-form-submit" disabled={loading}>
+                    {loading ? 'Enregistrement...' : 'Enregistrer'}
+                  </button>
+                  <button onClick={() => setShowCompanyForm(false)} className="crm-form-cancel">
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="crm-license-header">
           <div className="crm-license-info">
             <div className="crm-license-badge" style={{ backgroundColor: license.color }}>
@@ -1089,10 +1462,23 @@ export function CRM({ onLogin, onLogout }) {
             ) : (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <input type="email" placeholder="Email" value={email}
+                  <h3 style={{ color: '#64c8ff', marginBottom: '0.5rem', fontSize: '1rem' }}>Informations de connexion</h3>
+                  <input type="email" placeholder="Email*" value={email}
                     onChange={(e) => setEmail(e.target.value)} className="crm-login-input" />
-                  <input type="password" placeholder="Mot de passe (min 6 caractères)" value={password}
+                  <input type="password" placeholder="Mot de passe* (min 6 caractères)" value={password}
                     onChange={(e) => setPassword(e.target.value)} className="crm-login-input" />
+
+                  <h3 style={{ color: '#64c8ff', marginTop: '1rem', marginBottom: '0.5rem', fontSize: '1rem' }}>Informations de l'entreprise</h3>
+                  <input type="text" placeholder="Nom de l'entreprise*" value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)} className="crm-login-input" />
+                  <input type="text" placeholder="Numéro SIRET*" value={companySiret}
+                    onChange={(e) => setCompanySiret(e.target.value)} className="crm-login-input" />
+                  <input type="text" placeholder="Adresse complète*" value={companyAddress}
+                    onChange={(e) => setCompanyAddress(e.target.value)} className="crm-login-input" />
+                  <input type="tel" placeholder="Téléphone*" value={companyPhone}
+                    onChange={(e) => setCompanyPhone(e.target.value)} className="crm-login-input" />
+                  <input type="email" placeholder="Email entreprise*" value={companyEmail}
+                    onChange={(e) => setCompanyEmail(e.target.value)} className="crm-login-input" />
 
                   <div className="crm-license-selection">
                     <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
@@ -1524,6 +1910,9 @@ export function CRM({ onLogin, onLogout }) {
                   {quote.notes && <p className="crm-contact-notes">📝 {quote.notes}</p>}
 
                   <div className="crm-contact-actions">
+                    <button onClick={() => generateQuotePDF(quote)} className="crm-btn-edit" style={{ background: '#10b981' }}>
+                      <Download size={16} /> PDF
+                    </button>
                     <button onClick={() => handleEditQuote(quote)} className="crm-btn-edit">
                       <Edit2 size={16} /> Modifier
                     </button>
