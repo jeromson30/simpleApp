@@ -210,6 +210,40 @@ const ApiService = {
       method: 'POST',
       body: JSON.stringify(data)
     });
+  },
+
+  // Quotes
+  async getQuotes() {
+    return this.request('/quotes');
+  },
+
+  async getQuote(id) {
+    return this.request(`/quotes/${id}`);
+  },
+
+  async createQuote(data) {
+    return this.request('/quotes', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateQuote(id, data) {
+    return this.request(`/quotes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateQuoteStatus(id, status) {
+    return this.request(`/quotes/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+  },
+
+  async deleteQuote(id) {
+    return this.request(`/quotes/${id}`, { method: 'DELETE' });
   }
 };
 
@@ -243,6 +277,28 @@ export function CRM({ onLogin, onLogout }) {
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', company: '', status: 'prospect', notes: ''
   });
+
+  // Quotes states
+  const [quotes, setQuotes] = useState([]);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [editingQuoteId, setEditingQuoteId] = useState(null);
+  const [quoteFormData, setQuoteFormData] = useState({
+    quote_number: '',
+    contact_id: null,
+    client_name: '',
+    client_email: '',
+    client_address: '',
+    items: [{ description: '', quantity: 1, unit_price: 0, total: 0 }],
+    subtotal: 0,
+    tax_rate: 20,
+    tax_amount: 0,
+    total: 0,
+    status: 'draft',
+    valid_until: '',
+    payment_terms: '',
+    notes: ''
+  });
+  const [quoteFilter, setQuoteFilter] = useState('all');
 
   // ✅ NOUVEAU: Configurer le callback de suspension
   useEffect(() => {
@@ -328,15 +384,33 @@ export function CRM({ onLogin, onLogout }) {
     }
   }, []);
 
+  const loadQuotes = useCallback(async () => {
+    try {
+      const response = await ApiService.getQuotes();
+      if (response.ok) {
+        const data = await response.json();
+        // Parse items if they are strings
+        const parsedData = data.map(quote => ({
+          ...quote,
+          items: typeof quote.items === 'string' ? JSON.parse(quote.items) : quote.items
+        }));
+        setQuotes(parsedData);
+      }
+    } catch (error) {
+      console.error('Erreur chargement devis:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (currentUser) {
       loadContacts();
       loadInteractions();
+      loadQuotes();
       if (currentUser.isOwner) {
         loadSubAccounts();
       }
     }
-  }, [currentUser, loadContacts, loadInteractions, loadSubAccounts]);
+  }, [currentUser, loadContacts, loadInteractions, loadQuotes, loadSubAccounts]);
 
   // ==================== AUTH HANDLERS ====================
 
@@ -581,6 +655,196 @@ export function CRM({ onLogin, onLogout }) {
 
   const getContactInteractions = (contactId) =>
     interactions.filter(i => i.contact_id === contactId);
+
+  // ==================== QUOTES HANDLERS ====================
+
+  const generateQuoteNumber = () => {
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `DEV-${year}${month}-${random}`;
+  };
+
+  const calculateQuoteTotals = (items, taxRate) => {
+    const subtotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
+    const taxAmount = (subtotal * taxRate) / 100;
+    const total = subtotal + taxAmount;
+    return { subtotal, taxAmount, total };
+  };
+
+  const handleQuoteItemChange = (index, field, value) => {
+    const newItems = [...quoteFormData.items];
+    newItems[index][field] = value;
+
+    // Recalculate item total
+    if (field === 'quantity' || field === 'unit_price') {
+      newItems[index].total = newItems[index].quantity * newItems[index].unit_price;
+    }
+
+    // Recalculate quote totals
+    const { subtotal, taxAmount, total } = calculateQuoteTotals(newItems, quoteFormData.tax_rate);
+
+    setQuoteFormData({
+      ...quoteFormData,
+      items: newItems,
+      subtotal,
+      tax_amount: taxAmount,
+      total
+    });
+  };
+
+  const handleAddQuoteItem = () => {
+    setQuoteFormData({
+      ...quoteFormData,
+      items: [...quoteFormData.items, { description: '', quantity: 1, unit_price: 0, total: 0 }]
+    });
+  };
+
+  const handleRemoveQuoteItem = (index) => {
+    if (quoteFormData.items.length === 1) {
+      alert('Un devis doit contenir au moins un article');
+      return;
+    }
+    const newItems = quoteFormData.items.filter((_, i) => i !== index);
+    const { subtotal, taxAmount, total } = calculateQuoteTotals(newItems, quoteFormData.tax_rate);
+
+    setQuoteFormData({
+      ...quoteFormData,
+      items: newItems,
+      subtotal,
+      tax_amount: taxAmount,
+      total
+    });
+  };
+
+  const handleContactSelect = (contactId) => {
+    const contact = contacts.find(c => c.id === parseInt(contactId));
+    if (contact) {
+      setQuoteFormData({
+        ...quoteFormData,
+        contact_id: contact.id,
+        client_name: contact.name,
+        client_email: contact.email,
+        client_address: contact.company || ''
+      });
+    } else {
+      setQuoteFormData({
+        ...quoteFormData,
+        contact_id: null,
+        client_name: '',
+        client_email: '',
+        client_address: ''
+      });
+    }
+  };
+
+  const handleCreateQuote = async (e) => {
+    e.preventDefault();
+
+    if (!quoteFormData.quote_number) {
+      alert('Numéro de devis requis');
+      return;
+    }
+
+    if (!quoteFormData.client_name && !quoteFormData.contact_id) {
+      alert('Veuillez sélectionner un contact ou saisir un nom de client');
+      return;
+    }
+
+    if (quoteFormData.items.length === 0 || !quoteFormData.items[0].description) {
+      alert('Veuillez ajouter au moins un article');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (editingQuoteId) {
+        const response = await ApiService.updateQuote(editingQuoteId, quoteFormData);
+        if (response.ok) {
+          const updated = await response.json();
+          setQuotes(quotes.map(q => q.id === editingQuoteId ? updated : q));
+          alert('Devis modifié avec succès');
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Erreur modification');
+        }
+      } else {
+        const response = await ApiService.createQuote(quoteFormData);
+        if (response.ok) {
+          const newQuote = await response.json();
+          setQuotes([newQuote, ...quotes]);
+          alert('Devis créé avec succès');
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Erreur création');
+        }
+      }
+
+      // Reset form
+      setQuoteFormData({
+        quote_number: '',
+        contact_id: null,
+        client_name: '',
+        client_email: '',
+        client_address: '',
+        items: [{ description: '', quantity: 1, unit_price: 0, total: 0 }],
+        subtotal: 0,
+        tax_rate: 20,
+        tax_amount: 0,
+        total: 0,
+        status: 'draft',
+        valid_until: '',
+        payment_terms: '',
+        notes: ''
+      });
+      setShowQuoteForm(false);
+      setEditingQuoteId(null);
+
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditQuote = (quote) => {
+    setQuoteFormData({
+      ...quote,
+      items: quote.items || [{ description: '', quantity: 1, unit_price: 0, total: 0 }]
+    });
+    setEditingQuoteId(quote.id);
+    setShowQuoteForm(true);
+  };
+
+  const handleDeleteQuote = async (id) => {
+    if (!window.confirm('Confirmer la suppression de ce devis ?')) return;
+
+    setLoading(true);
+    try {
+      const response = await ApiService.deleteQuote(id);
+      if (response.ok) {
+        setQuotes(quotes.filter(q => q.id !== id));
+        alert('Devis supprimé');
+      }
+    } catch (error) {
+      alert('Erreur suppression');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeQuoteStatus = async (quoteId, newStatus) => {
+    try {
+      const response = await ApiService.updateQuoteStatus(quoteId, newStatus);
+      if (response.ok) {
+        setQuotes(quotes.map(q =>
+          q.id === quoteId ? { ...q, status: newStatus } : q
+        ));
+      }
+    } catch (error) {
+      alert('Erreur changement statut');
+    }
+  };
 
   // ==================== EXPORT ====================
 
@@ -901,6 +1165,8 @@ export function CRM({ onLogin, onLogout }) {
         <div className="crm-tabs-wrapper">
           <button onClick={() => setActiveTab('contacts')}
             className={`crm-tab-button ${activeTab === 'contacts' ? 'active' : ''}`}>📋 Contacts</button>
+          <button onClick={() => setActiveTab('quotes')}
+            className={`crm-tab-button ${activeTab === 'quotes' ? 'active' : ''}`}>💰 Devis</button>
           <button onClick={() => setActiveTab('pipeline')}
             className={`crm-tab-button ${activeTab === 'pipeline' ? 'active' : ''}`}>🎯 Pipeline</button>
           <button onClick={() => setActiveTab('interactions')}
@@ -979,6 +1245,314 @@ export function CRM({ onLogin, onLogout }) {
                     className="crm-button-add"><Plus size={18} /> <span>Ajouter</span></button>
                   <button onClick={exportToPDF} className="crm-button-export"><Download size={18} /> <span>Export</span></button>
                 </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Quotes Tab */}
+        {activeTab === 'quotes' && (
+          <>
+            {showQuoteForm && (
+              <div className="crm-form-container">
+                <h2 className="crm-form-title">{editingQuoteId ? 'Modifier' : 'Créer'} un devis</h2>
+
+                {/* Contact selection */}
+                <div className="crm-form-grid">
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.7)' }}>
+                      Contact existant (optionnel)
+                    </label>
+                    <select
+                      value={quoteFormData.contact_id || ''}
+                      onChange={(e) => handleContactSelect(e.target.value)}
+                      className="crm-form-select"
+                    >
+                      <option value="">-- Saisie manuelle --</option>
+                      {contacts.map(c => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <input
+                    type="text"
+                    placeholder="Numéro de devis*"
+                    value={quoteFormData.quote_number}
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, quote_number: e.target.value })}
+                    className="crm-form-input"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Nom du client*"
+                    value={quoteFormData.client_name}
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, client_name: e.target.value })}
+                    className="crm-form-input"
+                  />
+
+                  <input
+                    type="email"
+                    placeholder="Email du client"
+                    value={quoteFormData.client_email}
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, client_email: e.target.value })}
+                    className="crm-form-input"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Adresse du client"
+                    value={quoteFormData.client_address}
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, client_address: e.target.value })}
+                    className="crm-form-input"
+                  />
+
+                  <input
+                    type="date"
+                    placeholder="Date de validité"
+                    value={quoteFormData.valid_until}
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, valid_until: e.target.value })}
+                    className="crm-form-input"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Conditions de paiement"
+                    value={quoteFormData.payment_terms}
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, payment_terms: e.target.value })}
+                    className="crm-form-input"
+                  />
+
+                  {/* Items */}
+                  <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <label style={{ color: 'rgba(255,255,255,0.7)', fontWeight: '500' }}>Articles</label>
+                      <button
+                        type="button"
+                        onClick={handleAddQuoteItem}
+                        className="crm-button-add"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                      >
+                        + Ajouter un article
+                      </button>
+                    </div>
+
+                    {quoteFormData.items.map((item, index) => (
+                      <div key={index} style={{
+                        display: 'grid',
+                        gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
+                        gap: '0.5rem',
+                        marginBottom: '0.5rem',
+                        padding: '0.75rem',
+                        background: 'rgba(255,255,255,0.03)',
+                        borderRadius: '8px'
+                      }}>
+                        <input
+                          type="text"
+                          placeholder="Description*"
+                          value={item.description}
+                          onChange={(e) => handleQuoteItemChange(index, 'description', e.target.value)}
+                          className="crm-form-input"
+                          style={{ margin: 0 }}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Quantité"
+                          value={item.quantity}
+                          onChange={(e) => handleQuoteItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
+                          className="crm-form-input"
+                          style={{ margin: 0 }}
+                          min="1"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Prix unitaire"
+                          value={item.unit_price}
+                          onChange={(e) => handleQuoteItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                          className="crm-form-input"
+                          style={{ margin: 0 }}
+                          step="0.01"
+                        />
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'rgba(255,255,255,0.9)',
+                          fontWeight: '500'
+                        }}>
+                          {item.total.toFixed(2)}€
+                        </div>
+                        {quoteFormData.items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveQuoteItem(index)}
+                            className="crm-btn-delete"
+                            style={{ margin: 0, padding: '0.5rem' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Totals */}
+                  <div style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: 'rgba(100,200,255,0.05)', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.7)' }}>
+                      <span>Sous-total HT:</span>
+                      <span style={{ fontWeight: '500', color: 'white' }}>{quoteFormData.subtotal.toFixed(2)}€</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.7)' }}>
+                      <span>TVA ({quoteFormData.tax_rate}%):</span>
+                      <span style={{ fontWeight: '500', color: 'white' }}>{quoteFormData.tax_amount.toFixed(2)}€</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '1.1rem' }}>
+                      <span style={{ fontWeight: '600', color: 'white' }}>Total TTC:</span>
+                      <span style={{ fontWeight: '700', color: '#64c8ff' }}>{quoteFormData.total.toFixed(2)}€</span>
+                    </div>
+                  </div>
+
+                  <textarea
+                    placeholder="Notes"
+                    value={quoteFormData.notes}
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, notes: e.target.value })}
+                    className="crm-form-textarea"
+                    style={{ gridColumn: '1 / -1' }}
+                  />
+
+                  <div className="crm-form-actions" style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem' }}>
+                    <button onClick={handleCreateQuote} disabled={loading} className="crm-form-submit">
+                      {loading ? 'En cours...' : editingQuoteId ? 'Mettre à jour' : 'Créer le devis'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowQuoteForm(false);
+                        setEditingQuoteId(null);
+                        setQuoteFormData({
+                          quote_number: '',
+                          contact_id: null,
+                          client_name: '',
+                          client_email: '',
+                          client_address: '',
+                          items: [{ description: '', quantity: 1, unit_price: 0, total: 0 }],
+                          subtotal: 0,
+                          tax_rate: 20,
+                          tax_amount: 0,
+                          total: 0,
+                          status: 'draft',
+                          valid_until: '',
+                          payment_terms: '',
+                          notes: ''
+                        });
+                      }}
+                      className="crm-form-cancel"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Filters */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              {['all', 'draft', 'sent', 'accepted', 'rejected', 'expired'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setQuoteFilter(status)}
+                  className={`crm-tab-button ${quoteFilter === status ? 'active' : ''}`}
+                  style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                >
+                  {status === 'all' ? 'Tous' :
+                   status === 'draft' ? 'Brouillon' :
+                   status === 'sent' ? 'Envoyé' :
+                   status === 'accepted' ? 'Accepté' :
+                   status === 'rejected' ? 'Refusé' : 'Expiré'}
+                </button>
+              ))}
+            </div>
+
+            {/* Quotes List */}
+            <div className="crm-contacts-list">
+              {quotes
+                .filter(q => quoteFilter === 'all' || q.status === quoteFilter)
+                .map(quote => (
+                <div key={quote.id} className="crm-contact-card">
+                  <div className="crm-contact-header">
+                    <div className="crm-contact-info" style={{ flex: 1 }}>
+                      <h3>{quote.quote_number}</h3>
+                      <p className="crm-contact-company">{quote.client_name}</p>
+                      {quote.client_email && <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>📧 {quote.client_email}</p>}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+                      <span className={`crm-status-badge crm-status-${quote.status}`}>
+                        {quote.status === 'draft' ? 'Brouillon' :
+                         quote.status === 'sent' ? 'Envoyé' :
+                         quote.status === 'accepted' ? 'Accepté' :
+                         quote.status === 'rejected' ? 'Refusé' : 'Expiré'}
+                      </span>
+                      <select
+                        value={quote.status}
+                        onChange={(e) => handleChangeQuoteStatus(quote.id, e.target.value)}
+                        className="crm-role-select"
+                        style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                      >
+                        <option value="draft">Brouillon</option>
+                        <option value="sent">Envoyé</option>
+                        <option value="accepted">Accepté</option>
+                        <option value="rejected">Refusé</option>
+                        <option value="expired">Expiré</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="crm-contact-details">
+                    <p style={{ fontSize: '1.25rem', fontWeight: '600', color: '#64c8ff' }}>
+                      💰 {quote.total.toFixed(2)}€ TTC
+                    </p>
+                    <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
+                      {quote.items?.length || 0} article{(quote.items?.length || 0) > 1 ? 's' : ''}
+                    </p>
+                    {quote.valid_until && (
+                      <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
+                        📅 Valide jusqu'au {new Date(quote.valid_until).toLocaleDateString('fr-FR')}
+                      </p>
+                    )}
+                  </div>
+
+                  {quote.notes && <p className="crm-contact-notes">📝 {quote.notes}</p>}
+
+                  <div className="crm-contact-actions">
+                    <button onClick={() => handleEditQuote(quote)} className="crm-btn-edit">
+                      <Edit2 size={16} /> Modifier
+                    </button>
+                    <button onClick={() => handleDeleteQuote(quote.id)} className="crm-btn-delete">
+                      <Trash2 size={16} /> Supprimer
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {quotes.filter(q => quoteFilter === 'all' || q.status === quoteFilter).length === 0 && (
+                <p className="crm-empty-message">Aucun devis trouvé</p>
+              )}
+            </div>
+
+            <div className="crm-toolbar">
+              <div className="crm-toolbar-content">
+                <p className="crm-toolbar-text">Gérez vos devis clients</p>
+                <button
+                  onClick={() => {
+                    setShowQuoteForm(true);
+                    setQuoteFormData({
+                      ...quoteFormData,
+                      quote_number: generateQuoteNumber()
+                    });
+                  }}
+                  className="crm-button-add"
+                >
+                  <Plus size={18} /> <span>Nouveau devis</span>
+                </button>
               </div>
             </div>
           </>
