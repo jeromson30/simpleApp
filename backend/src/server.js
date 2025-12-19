@@ -908,6 +908,286 @@ app.post('/api/crm/interactions', authenticateToken, async (req, res) => {
   }
 });
 
+// ==================== QUOTES (PROTECTED) ====================
+
+// Get all quotes for the user
+app.get('/api/crm/quotes', authenticateToken, async (req, res) => {
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    url.searchParams.append('owner_id', `eq.${ownerId}`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'created_at.desc');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const data = await response.json();
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Erreur fetch quotes:', error);
+    res.status(500).json({ error: 'Erreur chargement devis' });
+  }
+});
+
+// Get a specific quote by ID
+app.get('/api/crm/quotes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    url.searchParams.append('id', `eq.${id}`);
+    url.searchParams.append('owner_id', `eq.${ownerId}`);
+    url.searchParams.append('select', '*');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const quotes = await response.json();
+
+    if (!quotes || quotes.length === 0) {
+      return res.status(404).json({ error: 'Devis non trouvé' });
+    }
+
+    res.json(quotes[0]);
+  } catch (error) {
+    console.error('Erreur fetch quote:', error);
+    res.status(500).json({ error: 'Erreur chargement devis' });
+  }
+});
+
+// Create a new quote
+app.post('/api/crm/quotes', authenticateToken, async (req, res) => {
+  const {
+    quote_number,
+    contact_id,
+    client_name,
+    client_email,
+    client_address,
+    items,
+    subtotal,
+    tax_rate,
+    tax_amount,
+    total,
+    status,
+    valid_until,
+    payment_terms,
+    notes
+  } = req.body;
+
+  // Validation
+  if (!quote_number) {
+    return res.status(400).json({ error: 'Numéro de devis requis' });
+  }
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Au moins un article requis' });
+  }
+
+  if (!client_name && !contact_id) {
+    return res.status(400).json({ error: 'Nom du client ou contact_id requis' });
+  }
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    // Check if quote_number already exists for this owner
+    const checkUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    checkUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    checkUrl.searchParams.append('quote_number', `eq.${quote_number}`);
+    checkUrl.searchParams.append('select', 'id');
+
+    const checkResponse = await fetch(checkUrl.toString(), { headers: supabaseHeaders });
+    const existing = await checkResponse.json();
+
+    if (existing && existing.length > 0) {
+      return res.status(409).json({ error: 'Ce numéro de devis existe déjà' });
+    }
+
+    const newQuote = {
+      owner_id: ownerId,
+      created_by: req.user.id,
+      quote_number,
+      contact_id: contact_id || null,
+      client_name: client_name || null,
+      client_email: client_email || null,
+      client_address: client_address || null,
+      items: JSON.stringify(items),
+      subtotal: subtotal || 0,
+      tax_rate: tax_rate || 20,
+      tax_amount: tax_amount || 0,
+      total: total || 0,
+      status: status || 'draft',
+      valid_until: valid_until || null,
+      payment_terms: payment_terms || null,
+      notes: notes || null,
+      created_at: new Date().toISOString()
+    };
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_quotes`, {
+      method: 'POST',
+      headers: supabaseHeaders,
+      body: JSON.stringify(newQuote)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    const inserted = await response.json();
+    const createdQuote = inserted[0] || newQuote;
+
+    // Parse items back to JSON for response
+    if (createdQuote.items && typeof createdQuote.items === 'string') {
+      createdQuote.items = JSON.parse(createdQuote.items);
+    }
+
+    res.status(201).json(createdQuote);
+
+  } catch (error) {
+    console.error('Erreur création devis:', error);
+    res.status(500).json({ error: 'Erreur création devis' });
+  }
+});
+
+// Update a quote
+app.patch('/api/crm/quotes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const {
+    quote_number,
+    contact_id,
+    client_name,
+    client_email,
+    client_address,
+    items,
+    subtotal,
+    tax_rate,
+    tax_amount,
+    total,
+    status,
+    valid_until,
+    payment_terms,
+    notes
+  } = req.body;
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const updatedData = { updated_at: new Date().toISOString() };
+
+    if (quote_number !== undefined) updatedData.quote_number = quote_number;
+    if (contact_id !== undefined) updatedData.contact_id = contact_id;
+    if (client_name !== undefined) updatedData.client_name = client_name;
+    if (client_email !== undefined) updatedData.client_email = client_email;
+    if (client_address !== undefined) updatedData.client_address = client_address;
+    if (items !== undefined) updatedData.items = JSON.stringify(items);
+    if (subtotal !== undefined) updatedData.subtotal = subtotal;
+    if (tax_rate !== undefined) updatedData.tax_rate = tax_rate;
+    if (tax_amount !== undefined) updatedData.tax_amount = tax_amount;
+    if (total !== undefined) updatedData.total = total;
+    if (status !== undefined) updatedData.status = status;
+    if (valid_until !== undefined) updatedData.valid_until = valid_until;
+    if (payment_terms !== undefined) updatedData.payment_terms = payment_terms;
+    if (notes !== undefined) updatedData.notes = notes;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    url.searchParams.append('id', `eq.${id}`);
+    url.searchParams.append('owner_id', `eq.${ownerId}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify(updatedData)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    const updated = await response.json();
+    const updatedQuote = updated[0] || updatedData;
+
+    // Parse items back to JSON for response
+    if (updatedQuote.items && typeof updatedQuote.items === 'string') {
+      updatedQuote.items = JSON.parse(updatedQuote.items);
+    }
+
+    res.json(updatedQuote);
+
+  } catch (error) {
+    console.error('Erreur update quote:', error);
+    res.status(500).json({ error: 'Erreur modification devis' });
+  }
+});
+
+// Update quote status
+app.patch('/api/crm/quotes/:id/status', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const validStatuses = ['draft', 'sent', 'accepted', 'rejected', 'expired'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({
+      error: 'Statut invalide. Valeurs autorisées: draft, sent, accepted, rejected, expired'
+    });
+  }
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    url.searchParams.append('id', `eq.${id}`);
+    url.searchParams.append('owner_id', `eq.${ownerId}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify({
+        status,
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({ message: 'Statut mis à jour', status });
+
+  } catch (error) {
+    console.error('Erreur update status:', error);
+    res.status(500).json({ error: 'Erreur modification statut' });
+  }
+});
+
+// Delete a quote
+app.delete('/api/crm/quotes/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    url.searchParams.append('id', `eq.${id}`);
+    url.searchParams.append('owner_id', `eq.${ownerId}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'DELETE',
+      headers: supabaseHeaders
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    res.json({ message: 'Devis supprimé' });
+
+  } catch (error) {
+    console.error('Erreur suppression quote:', error);
+    res.status(500).json({ error: 'Erreur suppression devis' });
+  }
+});
+
 // ==================== STATS (PROTECTED) ====================
 
 app.get('/api/crm/stats', authenticateToken, async (req, res) => {
