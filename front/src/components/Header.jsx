@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { Menu, X, Lock, LogOut, Shield } from 'lucide-react';
+import { Menu, X, Lock, LogOut, Shield, Users, FileText, TrendingUp, MessageSquare, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 // Composant Header avec titre dynamique et user menu CRM
@@ -44,14 +44,27 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
             <a href="/stats">Offres</a>
             <a href="/contact">Contact</a>
 
+            {/* Séparateur visuel */}
+            {currentUser && <div className="nav-separator"></div>}
+
             {/* Menu CRM si connecté */}
             {currentUser ? (
               <>
-                <a href="/crm/contacts" className={location.pathname === '/crm/contacts' || location.pathname === '/crm' ? 'active' : ''}>Contacts</a>
-                <a href="/crm/devis" className={location.pathname === '/crm/devis' ? 'active' : ''}>Devis</a>
-                <a href="/crm/pipeline" className={location.pathname === '/crm/pipeline' ? 'active' : ''}>Pipeline</a>
-                <a href="/crm/interactions" className={location.pathname === '/crm/interactions' ? 'active' : ''}>Interactions</a>
-                <a href="/crm/administration" className={location.pathname === '/crm/administration' ? 'active' : ''}>Administration</a>
+                <a href="/crm/contacts" className={`nav-crm-link ${location.pathname === '/crm/contacts' || location.pathname === '/crm' ? 'active' : ''}`}>
+                  <Users size={16} /> Contacts
+                </a>
+                <a href="/crm/devis" className={`nav-crm-link ${location.pathname === '/crm/devis' ? 'active' : ''}`}>
+                  <FileText size={16} /> Devis
+                </a>
+                <a href="/crm/pipeline" className={`nav-crm-link ${location.pathname === '/crm/pipeline' ? 'active' : ''}`}>
+                  <TrendingUp size={16} /> Pipeline
+                </a>
+                <a href="/crm/interactions" className={`nav-crm-link ${location.pathname === '/crm/interactions' ? 'active' : ''}`}>
+                  <MessageSquare size={16} /> Interactions
+                </a>
+                <a href="/crm/administration" className={`nav-crm-link ${location.pathname === '/crm/administration' ? 'active' : ''}`}>
+                  <Settings size={16} /> Administration
+                </a>
               </>
             ) : (
               <a href="/crm" className="nav-crm-btn" title="Accès CRM">
@@ -108,14 +121,27 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
           <a href="/stats">Offres</a>
           <a href="/contact">Contact</a>
 
+          {/* Séparateur dans le menu mobile */}
+          {currentUser && <div className="mobile-nav-separator">CRM</div>}
+
           {/* Menu CRM si connecté */}
           {currentUser ? (
             <>
-              <a href="/crm/contacts">Contacts</a>
-              <a href="/crm/devis">Devis</a>
-              <a href="/crm/pipeline">Pipeline</a>
-              <a href="/crm/interactions">Interactions</a>
-              <a href="/crm/administration">Administration</a>
+              <a href="/crm/contacts" className="mobile-crm-link">
+                <Users size={16} /> Contacts
+              </a>
+              <a href="/crm/devis" className="mobile-crm-link">
+                <FileText size={16} /> Devis
+              </a>
+              <a href="/crm/pipeline" className="mobile-crm-link">
+                <TrendingUp size={16} /> Pipeline
+              </a>
+              <a href="/crm/interactions" className="mobile-crm-link">
+                <MessageSquare size={16} /> Interactions
+              </a>
+              <a href="/crm/administration" className="mobile-crm-link">
+                <Settings size={16} /> Administration
+              </a>
             </>
           ) : (
             <a href="/crm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
