@@ -43,9 +43,22 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
             <a href="/">Accueil</a>
             <a href="/offers">Offres</a>
             <a href="/contact">Contact</a>
-            <a href="/crm" className="nav-crm-btn" title="Accès CRM">
-              <Lock size={18} />
-            </a>
+
+            {/* Menu CRM si connecté */}
+            {currentUser ? (
+              <>
+                <a href="/crm/contacts" className={location.pathname === '/crm/contacts' || location.pathname === '/crm' ? 'active' : ''}>Contacts</a>
+                <a href="/crm/devis" className={location.pathname === '/crm/devis' ? 'active' : ''}>Devis</a>
+                <a href="/crm/pipeline" className={location.pathname === '/crm/pipeline' ? 'active' : ''}>Pipeline</a>
+                <a href="/crm/interactions" className={location.pathname === '/crm/interactions' ? 'active' : ''}>Interactions</a>
+                <a href="/crm/administration" className={location.pathname === '/crm/administration' ? 'active' : ''}>Administration</a>
+              </>
+            ) : (
+              <a href="/crm" className="nav-crm-btn" title="Accès CRM">
+                <Lock size={18} />
+              </a>
+            )}
+
             <a href="/admin" className="nav-admin-btn" title="Administration">
               <Shield size={18} />
             </a>
@@ -94,9 +107,22 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
           <a href="/">Accueil</a>
           <a href="/offers">Offres</a>
           <a href="/contact">Contact</a>
-          <a href="/crm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Lock size={18} /> CRM
-          </a>
+
+          {/* Menu CRM si connecté */}
+          {currentUser ? (
+            <>
+              <a href="/crm/contacts">Contacts</a>
+              <a href="/crm/devis">Devis</a>
+              <a href="/crm/pipeline">Pipeline</a>
+              <a href="/crm/interactions">Interactions</a>
+              <a href="/crm/administration">Administration</a>
+            </>
+          ) : (
+            <a href="/crm" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Lock size={18} /> CRM
+            </a>
+          )}
+
           <a href="/admin" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Shield size={18} /> Admin
           </a>

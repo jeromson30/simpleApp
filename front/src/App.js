@@ -277,9 +277,9 @@ function AppContent() {
           path="/contact" 
           element={<ContactContent />} 
         />
-        <Route 
-          path="/crm" 
-          element={<CRM onLogin={handleCrmLogin} onLogout={handleCrmLogout} />} 
+        <Route
+          path="/crm/*"
+          element={<CRM onLogin={handleCrmLogin} onLogout={handleCrmLogout} />}
         />
       </Routes>
 
