@@ -814,6 +814,12 @@ main, nav, footer, .banner {
   transition: all 0.3s ease;
 }
 
+.crm-form-select option {
+  background: #1a1a24;
+  color: white;
+  padding: 0.5rem;
+}
+
 .crm-form-input::placeholder,
 .crm-form-textarea::placeholder {
   color: rgba(255, 255, 255, 0.5);
@@ -1768,6 +1774,7 @@ main, nav, footer, .banner {
 .crm-role-member { background: rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.8); }
 .crm-role-select { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 0.4rem 0.6rem; color: #fff; font-size: 0.8rem; cursor: pointer; }
 .crm-role-select:focus { outline: none; border-color: #64c8ff; }
+.crm-role-select option { background: #1a1a24; color: white; padding: 0.5rem; }
 
 /* DELETE BUTTON SMALL */
 .crm-btn-delete-small { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.4rem; color: #ef4444; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
@@ -1864,6 +1871,7 @@ main, nav, footer, .banner {
 .crm-role-member { background: rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.8); }
 .crm-role-select { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 0.4rem 0.6rem; color: #fff; font-size: 0.8rem; cursor: pointer; }
 .crm-role-select:focus { outline: none; border-color: #64c8ff; }
+.crm-role-select option { background: #1a1a24; color: white; padding: 0.5rem; }
 
 /* DELETE BUTTON SMALL */
 .crm-btn-delete-small { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.4rem; color: #ef4444; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
