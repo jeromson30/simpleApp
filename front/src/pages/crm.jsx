@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw, Settings } from 'lucide-react';
 import '../App.css';
 
@@ -318,7 +319,6 @@ export function CRM({ onLogin, onLogout }) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('contacts');
   const [selectedContact, setSelectedContact] = useState(null);
   const [interactionText, setInteractionText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -1591,38 +1591,13 @@ export function CRM({ onLogin, onLogout }) {
     <div className="crm-container">
       <div className="crm-main">
 
-        {/* User Banner */}
-        <div className="crm-user-banner">
-          <div className="crm-user-info">
-            <span className="crm-user-email">{currentUser.email}</span>
-            <span className="crm-license-badge-small"
-              style={{ backgroundColor: LICENSE_TYPES[currentUser.license]?.color || '#6b7280' }}>
-              {currentUser.isOwner ? <Crown size={12} /> : <Shield size={12} />}
-              {currentUser.licenseName}
-              {!currentUser.isOwner && ` (${currentUser.role})`}
-            </span>
-          </div>
-          <button onClick={handleLogout} className="crm-logout-btn">
-            <LogOut size={16} /> Déconnexion
-          </button>
-        </div>
+        {/* Routes */}
+        <Routes>
+          {/* Redirect root to contacts */}
+          <Route path="/" element={<Navigate to="/crm/contacts" replace />} />
 
-        {/* Tabs */}
-        <div className="crm-tabs-wrapper">
-          <button onClick={() => setActiveTab('contacts')}
-            className={`crm-tab-button ${activeTab === 'contacts' ? 'active' : ''}`}>📋 Contacts</button>
-          <button onClick={() => setActiveTab('quotes')}
-            className={`crm-tab-button ${activeTab === 'quotes' ? 'active' : ''}`}>💰 Devis</button>
-          <button onClick={() => setActiveTab('pipeline')}
-            className={`crm-tab-button ${activeTab === 'pipeline' ? 'active' : ''}`}>🎯 Pipeline</button>
-          <button onClick={() => setActiveTab('interactions')}
-            className={`crm-tab-button ${activeTab === 'interactions' ? 'active' : ''}`}>💬 Interactions</button>
-          <button onClick={() => setActiveTab('team')}
-            className={`crm-tab-button ${activeTab === 'team' ? 'active' : ''}`}><Settings size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Administration</button>
-        </div>
-
-        {/* Contacts Tab */}
-        {activeTab === 'contacts' && (
+          {/* Contacts Route */}
+          <Route path="/contacts" element={
           <>
             {showForm && (
               <div className="crm-form-container">
@@ -1694,10 +1669,10 @@ export function CRM({ onLogin, onLogout }) {
               </div>
             </div>
           </>
-        )}
+          } />
 
-        {/* Quotes Tab */}
-        {activeTab === 'quotes' && (
+          {/* Quotes Route */}
+          <Route path="/devis" element={
           <>
             {showQuoteForm && (
               <div className="crm-form-container">
@@ -2005,10 +1980,10 @@ export function CRM({ onLogin, onLogout }) {
               </div>
             </div>
           </>
-        )}
+          } />
 
-        {/* Pipeline Tab */}
-        {activeTab === 'pipeline' && (
+          {/* Pipeline Route */}
+          <Route path="/pipeline" element={
           <>
             {renderPipeline()}
             <div className="crm-toolbar">
@@ -2018,10 +1993,10 @@ export function CRM({ onLogin, onLogout }) {
               </div>
             </div>
           </>
-        )}
+          } />
 
-        {/* Interactions Tab */}
-        {activeTab === 'interactions' && (
+          {/* Interactions Route */}
+          <Route path="/interactions" element={
           <>
             <div className="crm-interactions-grid">
               <div>
@@ -2071,10 +2046,10 @@ export function CRM({ onLogin, onLogout }) {
               </div>
             </div>
           </>
-        )}
+          } />
 
-        {/* Team Tab */}
-        {activeTab === 'team' && (
+          {/* Administration Route */}
+          <Route path="/administration" element={
           <>
             {renderTeamManagement()}
             <div className="crm-toolbar">
@@ -2085,7 +2060,8 @@ export function CRM({ onLogin, onLogout }) {
               </div>
             </div>
           </>
-        )}
+          } />
+        </Routes>
       </div>
     </div>
   );
