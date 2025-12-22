@@ -1628,6 +1628,443 @@ app.get('/api/crm/analytics/top-contacts', authenticateToken, async (req, res) =
   }
 });
 
+// ==================== EMAILS ====================
+
+// Send an email
+app.post('/api/crm/emails', authenticateToken, async (req, res) => {
+  const {
+    contact_id,
+    recipient_email,
+    recipient_name,
+    subject,
+    body,
+    template_id
+  } = req.body;
+
+  // Validation
+  if (!recipient_email || !subject || !body) {
+    return res.status(400).json({ error: 'Email, sujet et corps requis' });
+  }
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const newEmail = {
+      owner_id: ownerId,
+      sender_id: req.user.id,
+      contact_id: contact_id || null,
+      recipient_email,
+      recipient_name: recipient_name || null,
+      subject,
+      body,
+      template_id: template_id || null,
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_emails`, {
+      method: 'POST',
+      headers: supabaseHeaders,
+      body: JSON.stringify(newEmail)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    const inserted = await response.json();
+    const createdEmail = inserted[0] || newEmail;
+
+    // Créer une notification
+    if (contact_id) {
+      const notification = {
+        user_id: req.user.id,
+        owner_id: ownerId,
+        type: 'email_sent',
+        title: 'Email envoyé',
+        message: `Email envoyé à ${recipient_name || recipient_email}`,
+        link: `/crm/contacts`,
+        created_at: new Date().toISOString()
+      };
+
+      await fetch(`${SUPABASE_URL}/rest/v1/crm_notifications`, {
+        method: 'POST',
+        headers: supabaseHeaders,
+        body: JSON.stringify(notification)
+      });
+    }
+
+    res.status(201).json(createdEmail);
+
+  } catch (error) {
+    console.error('Erreur envoi email:', error);
+    res.status(500).json({ error: 'Erreur envoi email' });
+  }
+});
+
+// Get all emails
+app.get('/api/crm/emails', authenticateToken, async (req, res) => {
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+    const { limit = '50', status } = req.query;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_emails`);
+    url.searchParams.append('owner_id', `eq.${ownerId}`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'sent_at.desc');
+    url.searchParams.append('limit', limit);
+
+    if (status) {
+      url.searchParams.append('status', `eq.${status}`);
+    }
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const emails = await response.json();
+
+    res.json(emails);
+
+  } catch (error) {
+    console.error('Erreur récupération emails:', error);
+    res.status(500).json({ error: 'Erreur chargement emails' });
+  }
+});
+
+// Get emails for a specific contact
+app.get('/api/crm/emails/contact/:contactId', authenticateToken, async (req, res) => {
+  const { contactId } = req.params;
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_emails`);
+    url.searchParams.append('owner_id', `eq.${ownerId}`);
+    url.searchParams.append('contact_id', `eq.${contactId}`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'sent_at.desc');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const emails = await response.json();
+
+    res.json(emails);
+
+  } catch (error) {
+    console.error('Erreur récupération emails contact:', error);
+    res.status(500).json({ error: 'Erreur chargement emails' });
+  }
+});
+
+// Mark email as opened (for tracking)
+app.patch('/api/crm/emails/:id/opened', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    // Vérifier que l'email appartient à cet owner
+    const checkUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_emails`);
+    checkUrl.searchParams.append('id', `eq.${id}`);
+    checkUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+
+    const checkResponse = await fetch(checkUrl.toString(), { headers: supabaseHeaders });
+    const emails = await checkResponse.json();
+
+    if (!emails || emails.length === 0) {
+      return res.status(404).json({ error: 'Email non trouvé' });
+    }
+
+    // Mettre à jour le statut
+    const updateUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_emails`);
+    updateUrl.searchParams.append('id', `eq.${id}`);
+
+    const updateData = {
+      status: 'opened',
+      opened_at: new Date().toISOString()
+    };
+
+    const updateResponse = await fetch(updateUrl.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify(updateData)
+    });
+
+    if (!updateResponse.ok) {
+      throw new Error('Erreur mise à jour');
+    }
+
+    const updated = await updateResponse.json();
+
+    res.json(updated[0] || updateData);
+
+  } catch (error) {
+    console.error('Erreur marquage email ouvert:', error);
+    res.status(500).json({ error: 'Erreur mise à jour email' });
+  }
+});
+
+// ==================== EMAIL TEMPLATES ====================
+
+// Get all email templates
+app.get('/api/crm/email-templates', authenticateToken, async (req, res) => {
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_email_templates`);
+    url.searchParams.append('or', `(owner_id.eq.${ownerId},is_default.eq.true)`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'category,name');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const templates = await response.json();
+
+    // Parser les variables JSON
+    const parsedTemplates = templates.map(t => ({
+      ...t,
+      variables: typeof t.variables === 'string' ? JSON.parse(t.variables) : t.variables
+    }));
+
+    res.json(parsedTemplates);
+
+  } catch (error) {
+    console.error('Erreur récupération templates:', error);
+    res.status(500).json({ error: 'Erreur chargement templates' });
+  }
+});
+
+// Create a custom email template
+app.post('/api/crm/email-templates', authenticateToken, async (req, res) => {
+  const { name, subject, body, category = 'custom', variables = [] } = req.body;
+
+  if (!name || !subject || !body) {
+    return res.status(400).json({ error: 'Nom, sujet et corps requis' });
+  }
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    const newTemplate = {
+      owner_id: ownerId,
+      name,
+      subject,
+      body,
+      category,
+      variables: JSON.stringify(variables),
+      is_default: false,
+      created_at: new Date().toISOString()
+    };
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_email_templates`, {
+      method: 'POST',
+      headers: supabaseHeaders,
+      body: JSON.stringify(newTemplate)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur Supabase');
+    }
+
+    const inserted = await response.json();
+    const created = inserted[0] || newTemplate;
+
+    // Parser les variables pour la réponse
+    if (created.variables && typeof created.variables === 'string') {
+      created.variables = JSON.parse(created.variables);
+    }
+
+    res.status(201).json(created);
+
+  } catch (error) {
+    console.error('Erreur création template:', error);
+    res.status(500).json({ error: 'Erreur création template' });
+  }
+});
+
+// Update email template
+app.patch('/api/crm/email-templates/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { name, subject, body, category, variables } = req.body;
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    // Vérifier que le template appartient à cet owner (pas un template par défaut)
+    const checkUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_email_templates`);
+    checkUrl.searchParams.append('id', `eq.${id}`);
+    checkUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    checkUrl.searchParams.append('is_default', 'eq.false');
+
+    const checkResponse = await fetch(checkUrl.toString(), { headers: supabaseHeaders });
+    const templates = await checkResponse.json();
+
+    if (!templates || templates.length === 0) {
+      return res.status(404).json({ error: 'Template non trouvé ou non modifiable' });
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (subject !== undefined) updateData.subject = subject;
+    if (body !== undefined) updateData.body = body;
+    if (category !== undefined) updateData.category = category;
+    if (variables !== undefined) updateData.variables = JSON.stringify(variables);
+
+    const updateUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_email_templates`);
+    updateUrl.searchParams.append('id', `eq.${id}`);
+
+    const updateResponse = await fetch(updateUrl.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify(updateData)
+    });
+
+    if (!updateResponse.ok) {
+      throw new Error('Erreur mise à jour');
+    }
+
+    const updated = await updateResponse.json();
+    const result = updated[0] || updateData;
+
+    // Parser les variables
+    if (result.variables && typeof result.variables === 'string') {
+      result.variables = JSON.parse(result.variables);
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('Erreur mise à jour template:', error);
+    res.status(500).json({ error: 'Erreur mise à jour template' });
+  }
+});
+
+// Delete email template
+app.delete('/api/crm/email-templates/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    // Vérifier que le template appartient à cet owner (pas un template par défaut)
+    const checkUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_email_templates`);
+    checkUrl.searchParams.append('id', `eq.${id}`);
+    checkUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    checkUrl.searchParams.append('is_default', 'eq.false');
+
+    const checkResponse = await fetch(checkUrl.toString(), { headers: supabaseHeaders });
+    const templates = await checkResponse.json();
+
+    if (!templates || templates.length === 0) {
+      return res.status(404).json({ error: 'Template non trouvé ou non supprimable' });
+    }
+
+    const deleteUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_email_templates`);
+    deleteUrl.searchParams.append('id', `eq.${id}`);
+
+    await fetch(deleteUrl.toString(), {
+      method: 'DELETE',
+      headers: supabaseHeaders
+    });
+
+    res.json({ message: 'Template supprimé' });
+
+  } catch (error) {
+    console.error('Erreur suppression template:', error);
+    res.status(500).json({ error: 'Erreur suppression template' });
+  }
+});
+
+// ==================== NOTIFICATIONS ====================
+
+// Get user notifications
+app.get('/api/crm/notifications', authenticateToken, async (req, res) => {
+  try {
+    const { limit = '20', unread_only = 'false' } = req.query;
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_notifications`);
+    url.searchParams.append('user_id', `eq.${req.user.id}`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'created_at.desc');
+    url.searchParams.append('limit', limit);
+
+    if (unread_only === 'true') {
+      url.searchParams.append('is_read', 'eq.false');
+    }
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    const notifications = await response.json();
+
+    res.json(notifications);
+
+  } catch (error) {
+    console.error('Erreur récupération notifications:', error);
+    res.status(500).json({ error: 'Erreur chargement notifications' });
+  }
+});
+
+// Mark notification as read
+app.patch('/api/crm/notifications/:id/read', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Vérifier que la notification appartient à cet utilisateur
+    const checkUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_notifications`);
+    checkUrl.searchParams.append('id', `eq.${id}`);
+    checkUrl.searchParams.append('user_id', `eq.${req.user.id}`);
+
+    const checkResponse = await fetch(checkUrl.toString(), { headers: supabaseHeaders });
+    const notifications = await checkResponse.json();
+
+    if (!notifications || notifications.length === 0) {
+      return res.status(404).json({ error: 'Notification non trouvée' });
+    }
+
+    const updateUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_notifications`);
+    updateUrl.searchParams.append('id', `eq.${id}`);
+
+    const updateResponse = await fetch(updateUrl.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify({ is_read: true })
+    });
+
+    if (!updateResponse.ok) {
+      throw new Error('Erreur mise à jour');
+    }
+
+    const updated = await updateResponse.json();
+
+    res.json(updated[0] || { is_read: true });
+
+  } catch (error) {
+    console.error('Erreur marquage notification lue:', error);
+    res.status(500).json({ error: 'Erreur mise à jour notification' });
+  }
+});
+
+// Mark all notifications as read
+app.patch('/api/crm/notifications/mark-all-read', authenticateToken, async (req, res) => {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_notifications`);
+    url.searchParams.append('user_id', `eq.${req.user.id}`);
+    url.searchParams.append('is_read', 'eq.false');
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: supabaseHeaders,
+      body: JSON.stringify({ is_read: true })
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur mise à jour');
+    }
+
+    res.json({ message: 'Toutes les notifications marquées comme lues' });
+
+  } catch (error) {
+    console.error('Erreur marquage toutes notifications:', error);
+    res.status(500).json({ error: 'Erreur mise à jour notifications' });
+  }
+});
+
 // ==================== LICENSES ====================
 
 app.get('/api/crm/licenses', (req, res) => {
