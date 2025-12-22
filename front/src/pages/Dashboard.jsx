@@ -80,10 +80,10 @@ const Dashboard = ({ API_BASE, AuthService }) => {
       {/* Header avec filtres */}
       <div className="dashboard-header">
         <div>
-          <h2 style={{ margin: 0, color: '#1a1a2e', fontSize: '1.75rem', fontWeight: 700 }}>
+          <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>
             📊 Dashboard Analytics
           </h2>
-          <p style={{ margin: '0.5rem 0 0 0', color: '#6b7280' }}>
+          <p style={{ margin: '0.5rem 0 0 0' }}>
             Vue d'ensemble de votre activité commerciale
           </p>
         </div>
@@ -171,23 +171,24 @@ const Dashboard = ({ API_BASE, AuthService }) => {
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueData?.data || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
               <XAxis
                 dataKey="monthLabel"
-                stroke="#6b7280"
-                style={{ fontSize: '12px' }}
+                stroke="rgba(255, 255, 255, 0.4)"
+                style={{ fontSize: '12px', fill: 'rgba(255, 255, 255, 0.7)' }}
               />
               <YAxis
-                stroke="#6b7280"
-                style={{ fontSize: '12px' }}
+                stroke="rgba(255, 255, 255, 0.4)"
+                style={{ fontSize: '12px', fill: 'rgba(255, 255, 255, 0.7)' }}
                 tickFormatter={(value) => `${value}€`}
               />
               <Tooltip
                 contentStyle={{
-                  background: '#fff',
-                  border: '1px solid #e5e7eb',
+                  background: 'rgba(26, 26, 36, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
-                  padding: '8px 12px'
+                  padding: '8px 12px',
+                  color: 'white'
                 }}
                 formatter={(value) => [`${value}€`, 'Revenu']}
               />
@@ -238,22 +239,23 @@ const Dashboard = ({ API_BASE, AuthService }) => {
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={quotesDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
               <XAxis
                 dataKey="name"
-                stroke="#6b7280"
-                style={{ fontSize: '12px' }}
+                stroke="rgba(255, 255, 255, 0.4)"
+                style={{ fontSize: '12px', fill: 'rgba(255, 255, 255, 0.7)' }}
               />
               <YAxis
-                stroke="#6b7280"
-                style={{ fontSize: '12px' }}
+                stroke="rgba(255, 255, 255, 0.4)"
+                style={{ fontSize: '12px', fill: 'rgba(255, 255, 255, 0.7)' }}
               />
               <Tooltip
                 contentStyle={{
-                  background: '#fff',
-                  border: '1px solid #e5e7eb',
+                  background: 'rgba(26, 26, 36, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
-                  padding: '8px 12px'
+                  padding: '8px 12px',
+                  color: 'white'
                 }}
               />
               <Bar dataKey="value" radius={[8, 8, 0, 0]}>
@@ -273,7 +275,7 @@ const Dashboard = ({ API_BASE, AuthService }) => {
           </h3>
           <div className="top-contacts-list">
             {topContacts.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#6b7280', padding: '2rem' }}>
+              <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)', padding: '2rem' }}>
                 Aucun client avec CA pour le moment
               </p>
             ) : (
