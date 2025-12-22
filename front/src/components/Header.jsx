@@ -1,6 +1,27 @@
 import { useLocation } from 'react-router-dom';
 import { Menu, X, Lock, LogOut, Shield, Users, FileText, TrendingUp, MessageSquare, Settings, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
+import NotificationCenter from './NotificationCenter';
+
+// Configuration API
+const API_BASE = process.env.REACT_APP_API_URL || '/api/crm';
+
+// AuthService pour NotificationCenter
+const AuthService = {
+  getAuthHeaders: () => {
+    const token = localStorage.getItem('crm_token') || sessionStorage.getItem('crm_token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+  },
+  getUser: () => {
+    const userSession = sessionStorage.getItem('crm_user');
+    const userLocal = localStorage.getItem('crm_user');
+    const user = userLocal || userSession;
+    return user ? JSON.parse(user) : null;
+  }
+};
 
 // Composant Header avec titre dynamique et user menu CRM
 export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
@@ -80,10 +101,15 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
             </a>
           </div>
 
+          {/* Notification Center (si connecté au CRM) */}
+          {currentUser && (
+            <NotificationCenter API_BASE={API_BASE} AuthService={AuthService} />
+          )}
+
           {/* User Menu (si connecté au CRM) */}
           {currentUser && (
             <div className="user-menu-desktop">
-              <button 
+              <button
                 className="user-menu-toggle"
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 title={currentUser.email}
