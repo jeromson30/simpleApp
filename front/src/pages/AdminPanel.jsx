@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Users, Shield, ShieldOff, Trash2, Search, RefreshCw, 
-  LayoutDashboard, Settings, LogOut, Plus, Edit2, Save, X, 
+import {
+  Users, Shield, ShieldOff, Trash2, Search, RefreshCw,
+  LayoutDashboard, Settings, LogOut, Plus, Edit2, Save, X,
   Crown, AlertTriangle, UserCheck, UserX, Activity,
   ArrowUp, ArrowDown, Zap, TrendingUp, MessageSquare,
-  Download, Eye, FileText, Image, Newspaper, Euro, PieChart, CreditCard
+  Download, Eye, FileText, Image, Newspaper, Euro, PieChart, CreditCard, Menu
 } from 'lucide-react';
 
 const ADMIN_API = '/api/admin';
@@ -100,6 +100,7 @@ function AdminPanel() {
   const [editingNews, setEditingNews] = useState(null);
   const [carouselForm, setCarouselForm] = useState({ icon: 'Zap', title: '', description: '', cta_text: 'En savoir plus →', cta_link: '/crm', color: '#64c8ff' });
   const [newsForm, setNewsForm] = useState({ title: '', description: '', date: '', image: '📰', category: 'Actualité', link: '#' });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (AuthService.isAuthenticated()) {
@@ -281,30 +282,36 @@ function AdminPanel() {
 
   return (
     <div className="admin-container">
-      <aside className="admin-sidebar">
+      {/* Overlay pour mobile */}
+      {sidebarOpen && <div className="admin-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
           <Shield size={28} />
           <span className="admin-sidebar-title">Admin Panel</span>
+          <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>
+            <X size={20} />
+          </button>
         </div>
         <nav className="admin-nav">
-          <button className={`admin-nav-item ${activeSection === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveSection('dashboard')}>
+          <button className={`admin-nav-item ${activeSection === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveSection('dashboard'); setSidebarOpen(false); }}>
             <LayoutDashboard size={20} /><span>Dashboard</span>
           </button>
-          <button className={`admin-nav-item ${activeSection === 'users' ? 'active' : ''}`} onClick={() => setActiveSection('users')}>
+          <button className={`admin-nav-item ${activeSection === 'users' ? 'active' : ''}`} onClick={() => { setActiveSection('users'); setSidebarOpen(false); }}>
             <Users size={20} /><span>Utilisateurs</span>
           </button>
-          <button className={`admin-nav-item ${activeSection === 'revenue' ? 'active' : ''}`} onClick={() => setActiveSection('revenue')}>
+          <button className={`admin-nav-item ${activeSection === 'revenue' ? 'active' : ''}`} onClick={() => { setActiveSection('revenue'); setSidebarOpen(false); }}>
             <Euro size={20} /><span>Revenus</span>
           </button>
           <div className="admin-nav-section">Contenu</div>
-          <button className={`admin-nav-item ${activeSection === 'carousel' ? 'active' : ''}`} onClick={() => setActiveSection('carousel')}>
+          <button className={`admin-nav-item ${activeSection === 'carousel' ? 'active' : ''}`} onClick={() => { setActiveSection('carousel'); setSidebarOpen(false); }}>
             <Image size={20} /><span>Carrousel</span>
           </button>
-          <button className={`admin-nav-item ${activeSection === 'news' ? 'active' : ''}`} onClick={() => setActiveSection('news')}>
+          <button className={`admin-nav-item ${activeSection === 'news' ? 'active' : ''}`} onClick={() => { setActiveSection('news'); setSidebarOpen(false); }}>
             <Newspaper size={20} /><span>Actualités</span>
           </button>
           <div className="admin-nav-section">Système</div>
-          <button className={`admin-nav-item ${activeSection === 'settings' ? 'active' : ''}`} onClick={() => setActiveSection('settings')}>
+          <button className={`admin-nav-item ${activeSection === 'settings' ? 'active' : ''}`} onClick={() => { setActiveSection('settings'); setSidebarOpen(false); }}>
             <Settings size={20} /><span>Paramètres</span>
           </button>
         </nav>
@@ -317,17 +324,22 @@ function AdminPanel() {
 
       <main className="admin-main">
         <header className="admin-header">
-          <h1 className="admin-header-title">
-            {activeSection === 'dashboard' && 'Dashboard'}
-            {activeSection === 'users' && 'Utilisateurs'}
-            {activeSection === 'revenue' && 'Revenus & Abonnements'}
-            {activeSection === 'carousel' && 'Carrousel'}
-            {activeSection === 'news' && 'Actualités'}
-            {activeSection === 'settings' && 'Paramètres'}
-          </h1>
+          <div className="admin-header-left">
+            <button className="admin-hamburger" onClick={() => setSidebarOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <h1 className="admin-header-title">
+              {activeSection === 'dashboard' && 'Dashboard'}
+              {activeSection === 'users' && 'Utilisateurs'}
+              {activeSection === 'revenue' && 'Revenus & Abonnements'}
+              {activeSection === 'carousel' && 'Carrousel'}
+              {activeSection === 'news' && 'Actualités'}
+              {activeSection === 'settings' && 'Paramètres'}
+            </h1>
+          </div>
           <div className="admin-header-right">
             <button className="admin-btn-icon" onClick={loadData} title="Rafraîchir"><RefreshCw size={18} /></button>
-            <div className="admin-user-badge"><Crown size={16} /><span>{adminUser?.email}</span></div>
+            <div className="admin-user-badge"><Crown size={16} /><span className="admin-user-badge-text">{adminUser?.email}</span></div>
           </div>
         </header>
 
