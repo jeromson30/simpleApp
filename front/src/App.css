@@ -2093,6 +2093,23 @@ main, nav, footer, .banner {
   font-size: 1.1rem;
   color: var(--admin-text);
   white-space: nowrap;
+  flex: 1;
+}
+
+.admin-sidebar-close {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.admin-sidebar-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--admin-text);
 }
 
 .admin-nav {
@@ -2171,7 +2188,14 @@ main, nav, footer, .banner {
   z-index: 50;
 }
 
-.admin-header h1 {
+.admin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-header h1,
+.admin-header-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--admin-text);
@@ -2182,6 +2206,32 @@ main, nav, footer, .banner {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.admin-hamburger {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  color: var(--admin-text);
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.2s;
+}
+
+.admin-hamburger:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 99;
 }
 
 .admin-user-badge {
@@ -2914,55 +2964,173 @@ main, nav, footer, .banner {
   }
 }
 
-@media (max-width: 768px) {
-  .admin-sidebar {
-    width: 70px;
+/* Tablet responsive (between 768px and 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .admin-sidebar-header span,
-  .admin-nav-item span {
+  .admin-content {
+    padding: 1.5rem;
+  }
+
+  .admin-header-title {
+    font-size: 1.35rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hamburger menu visible on mobile */
+  .admin-hamburger {
+    display: flex;
+  }
+
+  /* Sidebar hidden by default on mobile */
+  .admin-sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    transition: transform 0.3s ease;
+  }
+
+  /* Sidebar visible when open */
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Close button visible on mobile */
+  .admin-sidebar-close {
+    display: flex;
+  }
+
+  /* Overlay visible when sidebar is open */
+  .admin-sidebar-overlay {
+    display: block;
+  }
+
+  /* Main content takes full width */
+  .admin-main {
+    margin-left: 0;
+  }
+
+  /* Stats grid single column */
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Header responsive */
+  .admin-header {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .admin-header-title {
+    font-size: 1.25rem;
+  }
+
+  .admin-header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .admin-header-right {
+    gap: 0.5rem;
+  }
+
+  /* User badge text hidden on small screens */
+  .admin-user-badge-text {
     display: none;
   }
 
-  .admin-main {
-    margin-left: 70px;
-  }
-
-  .admin-stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
+  /* Toolbar responsive */
   .admin-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
   }
 
-  .admin-search {
+  .admin-search,
+  .admin-search-box {
     width: 100%;
   }
 
-  .admin-table-container {
+  /* Content padding reduced */
+  .admin-content {
+    padding: 1rem;
+  }
+
+  /* Table scrollable */
+  .admin-table-container,
+  .admin-card {
     overflow-x: auto;
   }
 
-  .admin-carousel-item {
-    flex-direction: column;
-    align-items: stretch;
+  .admin-table {
+    min-width: 600px;
   }
 
-  .admin-carousel-preview {
+  /* Carousel item responsive */
+  .admin-content-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .admin-content-item-preview {
     width: 100%;
     height: 60px;
   }
 
-  .admin-form-row {
+  .admin-content-item-drag {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  /* Form grid single column */
+  .admin-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Dashboard grid single column */
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Modal responsive */
+  .admin-modal {
+    padding: 1rem;
+  }
+
+  .admin-modal-content {
+    padding: 1.5rem;
+    max-height: 85vh;
+  }
+
+  .admin-modal-title {
+    font-size: 1.1rem;
+  }
+
+  /* Icon and color pickers wrap better */
+  .admin-icon-picker,
+  .admin-color-picker,
+  .admin-emoji-picker {
+    gap: 0.35rem;
+  }
+
+  /* Stat cards more compact */
+  .admin-stat-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .admin-stat-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .admin-stat-number {
+    font-size: 1.5rem;
   }
 }
 
@@ -3849,35 +4017,82 @@ main, nav, footer, .banner {
   }
 }
 
-/* === Responsive Sidebar === */
-@media (max-width: 768px) {
-  .admin-sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-  }
-  
-  .admin-main {
-    margin-left: 0;
-  }
-  
-  .admin-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-  
-  .admin-search-box {
-    width: 100%;
-  }
-}
-
 /* ============================= */
 /* AMÉLIORATIONS RESPONSIVITÉ MOBILE */
 /* ============================= */
 
 /* PETIT MOBILE (< 480px) - Priorité critique */
 @media (max-width: 480px) {
+  /* Admin Panel - Extra responsive pour très petits écrans */
+  .admin-header-title {
+    font-size: 1.1rem !important;
+  }
+
+  .admin-content {
+    padding: 0.75rem !important;
+  }
+
+  .admin-card {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .admin-stat-card {
+    padding: 0.75rem !important;
+  }
+
+  .admin-stat-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .admin-stat-number {
+    font-size: 1.25rem !important;
+  }
+
+  .admin-stat-label {
+    font-size: 0.8rem !important;
+  }
+
+  .admin-btn-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .admin-modal-content {
+    padding: 1rem !important;
+  }
+
+  .admin-modal-actions {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+
+  .admin-modal-actions button {
+    width: 100%;
+  }
+
+  .admin-user-row {
+    padding: 0.5rem !important;
+  }
+
+  .admin-content-item {
+    padding: 0.75rem !important;
+  }
+
+  /* Touch-friendly buttons */
+  .admin-btn-primary,
+  .admin-btn-secondary,
+  .admin-btn-success {
+    min-height: 44px;
+  }
+
+  .admin-input,
+  .admin-select,
+  .admin-textarea {
+    min-height: 44px;
+  }
+
   /* Réorganiser grilles multi-colonnes en 1 colonne */
   .crm-pipeline-grid {
     grid-template-columns: 1fr !important;
