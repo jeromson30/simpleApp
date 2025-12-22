@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw, Settings } from 'lucide-react';
+import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw, Settings, Send, X } from 'lucide-react';
+import Dashboard from './Dashboard';
+import EmailComposer from '../components/EmailComposer';
+import EmailHistory from '../components/EmailHistory';
 import '../App.css';
 
 // Configuration API
@@ -347,6 +350,12 @@ export function CRM({ onLogin, onLogout }) {
     notes: ''
   });
   const [quoteFilter, setQuoteFilter] = useState('all');
+
+  // Email states
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [emailContact, setEmailContact] = useState(null);
+  const [showContactDetail, setShowContactDetail] = useState(false);
+  const [detailContact, setDetailContact] = useState(null);
 
   // ✅ NOUVEAU: Configurer le callback de suspension
   useEffect(() => {
@@ -749,6 +758,28 @@ export function CRM({ onLogin, onLogout }) {
 
   const getContactInteractions = (contactId) =>
     interactions.filter(i => i.contact_id === contactId);
+
+  // ==================== EMAIL HANDLERS ====================
+
+  const handleOpenEmailComposer = (contact) => {
+    setEmailContact(contact);
+    setShowEmailComposer(true);
+  };
+
+  const handleEmailSent = () => {
+    // Reload contacts or show success message
+    loadContacts();
+  };
+
+  const handleOpenContactDetail = (contact) => {
+    setDetailContact(contact);
+    setShowContactDetail(true);
+  };
+
+  const handleCloseContactDetail = () => {
+    setShowContactDetail(false);
+    setDetailContact(null);
+  };
 
   // ==================== QUOTES HANDLERS ====================
 
@@ -1593,8 +1624,13 @@ export function CRM({ onLogin, onLogout }) {
 
         {/* Routes */}
         <Routes>
-          {/* Redirect root to contacts */}
-          <Route path="/" element={<Navigate to="/crm/contacts" replace />} />
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/crm/dashboard" replace />} />
+
+          {/* Dashboard Route */}
+          <Route path="/dashboard" element={
+            <Dashboard API_BASE={API_BASE} AuthService={AuthService} />
+          } />
 
           {/* Contacts Route */}
           <Route path="/contacts" element={
@@ -1642,6 +1678,12 @@ export function CRM({ onLogin, onLogout }) {
                   </div>
                   {contact.notes && <p className="crm-contact-notes">📝 {contact.notes}</p>}
                   <div className="crm-contact-actions">
+                    <button onClick={() => handleOpenEmailComposer(contact)} className="crm-btn-edit" style={{ background: '#10b981' }}>
+                      <Send size={16} /> Envoyer email
+                    </button>
+                    <button onClick={() => handleOpenContactDetail(contact)} className="crm-btn-edit" style={{ background: '#8b5cf6' }}>
+                      <Users size={16} /> Détails
+                    </button>
                     <button onClick={() => handleEdit(contact)} className="crm-btn-edit"><Edit2 size={16} /> Modifier</button>
                     <button onClick={() => handleDelete(contact.id)} className="crm-btn-delete"><Trash2 size={16} /> Supprimer</button>
                   </div>
@@ -2062,6 +2104,107 @@ export function CRM({ onLogin, onLogout }) {
           </>
           } />
         </Routes>
+
+        {/* Email Composer Modal */}
+        <EmailComposer
+          isOpen={showEmailComposer}
+          onClose={() => setShowEmailComposer(false)}
+          contact={emailContact}
+          API_BASE={API_BASE}
+          AuthService={AuthService}
+          onEmailSent={handleEmailSent}
+        />
+
+        {/* Contact Detail Modal with Email History */}
+        {showContactDetail && detailContact && (
+          <div className="email-composer-overlay" onClick={handleCloseContactDetail}>
+            <div className="email-composer-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+              {/* Header */}
+              <div className="email-composer-header">
+                <div>
+                  <h2 className="email-composer-title">
+                    <Users size={20} />
+                    Détails du contact
+                  </h2>
+                  <p className="email-composer-subtitle">
+                    {detailContact.name} - {detailContact.email}
+                  </p>
+                </div>
+                <button onClick={handleCloseContactDetail} className="email-composer-close">
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="email-composer-body">
+                {/* Contact Info */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '2rem',
+                  padding: '1rem',
+                  background: 'rgba(255,255,255,0.03)',
+                  borderRadius: '8px'
+                }}>
+                  <div>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Nom</p>
+                    <p style={{ color: 'white', fontWeight: '500' }}>{detailContact.name}</p>
+                  </div>
+                  <div>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Email</p>
+                    <p style={{ color: 'white', fontWeight: '500' }}>{detailContact.email}</p>
+                  </div>
+                  {detailContact.phone && (
+                    <div>
+                      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Téléphone</p>
+                      <p style={{ color: 'white', fontWeight: '500' }}>{detailContact.phone}</p>
+                    </div>
+                  )}
+                  {detailContact.company && (
+                    <div>
+                      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Entreprise</p>
+                      <p style={{ color: 'white', fontWeight: '500' }}>{detailContact.company}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Statut</p>
+                    <span className={`crm-status-badge crm-status-${detailContact.status}`}>
+                      {detailContact.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Email History */}
+                <EmailHistory
+                  contactId={detailContact.id}
+                  API_BASE={API_BASE}
+                  AuthService={AuthService}
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="email-composer-footer">
+                <button
+                  onClick={() => {
+                    handleCloseContactDetail();
+                    handleOpenEmailComposer(detailContact);
+                  }}
+                  className="email-btn-primary"
+                >
+                  <Send size={16} />
+                  Envoyer un email
+                </button>
+                <button
+                  onClick={handleCloseContactDetail}
+                  className="email-btn-secondary"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
