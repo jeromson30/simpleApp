@@ -1,31 +1,13 @@
 -- =====================================================
 -- SCHEMA SQL POUR LE SYSTÈME D'EMAILS CRM
 -- À exécuter dans Supabase SQL Editor
+-- Version compatible avec crm_contacts (id INTEGER)
 -- =====================================================
 
--- Table des emails envoyés
-CREATE TABLE IF NOT EXISTS crm_emails (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_id UUID NOT NULL,
-  contact_id UUID REFERENCES crm_contacts(id) ON DELETE CASCADE,
-  sender_id UUID NOT NULL, -- ID de l'utilisateur qui envoie
-  recipient_email TEXT NOT NULL,
-  recipient_name TEXT,
-  subject TEXT NOT NULL,
-  body TEXT NOT NULL,
-  template_id UUID REFERENCES crm_email_templates(id) ON DELETE SET NULL,
-  status TEXT DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'opened', 'failed')),
-  sent_at TIMESTAMPTZ DEFAULT NOW(),
-  opened_at TIMESTAMPTZ,
-  metadata JSONB DEFAULT '{}', -- Pour stocker des infos supplémentaires
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Table des templates d'emails
+-- Table des templates d'emails (créée en premier car référencée par crm_emails)
 CREATE TABLE IF NOT EXISTS crm_email_templates (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_id UUID NOT NULL,
+  id SERIAL PRIMARY KEY,
+  owner_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   subject TEXT NOT NULL,
   body TEXT NOT NULL,
@@ -36,11 +18,30 @@ CREATE TABLE IF NOT EXISTS crm_email_templates (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Table des emails envoyés
+CREATE TABLE IF NOT EXISTS crm_emails (
+  id SERIAL PRIMARY KEY,
+  owner_id INTEGER NOT NULL,
+  contact_id INTEGER REFERENCES crm_contacts(id) ON DELETE CASCADE,
+  sender_id INTEGER NOT NULL, -- ID de l'utilisateur qui envoie
+  recipient_email TEXT NOT NULL,
+  recipient_name TEXT,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  template_id INTEGER REFERENCES crm_email_templates(id) ON DELETE SET NULL,
+  status TEXT DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'opened', 'failed')),
+  sent_at TIMESTAMPTZ DEFAULT NOW(),
+  opened_at TIMESTAMPTZ,
+  metadata JSONB DEFAULT '{}', -- Pour stocker des infos supplémentaires
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Table des notifications
 CREATE TABLE IF NOT EXISTS crm_notifications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  owner_id UUID NOT NULL,
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  owner_id INTEGER NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('email_sent', 'email_opened', 'contact_added', 'quote_created', 'quote_accepted', 'task_due', 'custom')),
   title TEXT NOT NULL,
   message TEXT NOT NULL,
@@ -86,9 +87,10 @@ CREATE TRIGGER update_crm_email_templates_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- Insertion de templates par défaut
+-- Note: Utilisez votre propre owner_id (remplacez 1 par l'id de votre compte owner)
 INSERT INTO crm_email_templates (owner_id, name, subject, body, category, is_default, variables) VALUES
   (
-    '00000000-0000-0000-0000-000000000000'::UUID, -- Remplacer par un owner_id valide ou créer pour chaque utilisateur
+    1, -- Remplacer par votre owner_id
     'Bienvenue nouveau client',
     'Bienvenue chez {company_name} !',
     'Bonjour {contact_name},
@@ -104,7 +106,7 @@ Cordialement,
     '["contact_name", "company_name", "sender_name"]'::JSONB
   ),
   (
-    '00000000-0000-0000-0000-000000000000'::UUID,
+    1,
     'Follow-up devis',
     'Concernant votre devis {quote_number}',
     'Bonjour {contact_name},
@@ -122,7 +124,7 @@ Cordialement,
     '["contact_name", "quote_number", "sender_name"]'::JSONB
   ),
   (
-    '00000000-0000-0000-0000-000000000000'::UUID,
+    1,
     'Relance prospect',
     'Donnons vie à votre projet',
     'Bonjour {contact_name},
@@ -142,7 +144,7 @@ Cordialement,
     '["contact_name", "project_name", "sender_name"]'::JSONB
   ),
   (
-    '00000000-0000-0000-0000-000000000000'::UUID,
+    1,
     'Remerciement',
     'Merci pour votre confiance',
     'Bonjour {contact_name},
@@ -158,7 +160,8 @@ Cordialement,
     'thank_you',
     true,
     '["contact_name", "sender_name"]'::JSONB
-  );
+  )
+ON CONFLICT DO NOTHING; -- Évite les erreurs si les templates existent déjà
 
 -- Commentaires sur les tables
 COMMENT ON TABLE crm_emails IS 'Historique des emails envoyés depuis le CRM';
