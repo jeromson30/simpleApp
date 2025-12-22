@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { Menu, X, Lock, LogOut, Shield, Users, FileText, TrendingUp, MessageSquare, Settings } from 'lucide-react';
+import { Menu, X, Lock, LogOut, Shield, Users, FileText, TrendingUp, MessageSquare, Settings, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 
 // Composant Header avec titre dynamique et user menu CRM
@@ -50,7 +50,10 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
             {/* Menu CRM si connecté */}
             {currentUser ? (
               <>
-                <a href="/crm/contacts" className={`nav-crm-link ${location.pathname === '/crm/contacts' || location.pathname === '/crm' ? 'active' : ''}`}>
+                <a href="/crm/dashboard" className={`nav-crm-link ${location.pathname === '/crm/dashboard' || location.pathname === '/crm' ? 'active' : ''}`}>
+                  <LayoutDashboard size={16} /> Dashboard
+                </a>
+                <a href="/crm/contacts" className={`nav-crm-link ${location.pathname === '/crm/contacts' ? 'active' : ''}`}>
                   <Users size={16} /> Contacts
                 </a>
                 <a href="/crm/devis" className={`nav-crm-link ${location.pathname === '/crm/devis' ? 'active' : ''}`}>
@@ -127,6 +130,9 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
           {/* Menu CRM si connecté */}
           {currentUser ? (
             <>
+              <a href="/crm/dashboard" className="mobile-crm-link">
+                <LayoutDashboard size={16} /> Dashboard
+              </a>
               <a href="/crm/contacts" className="mobile-crm-link">
                 <Users size={16} /> Contacts
               </a>

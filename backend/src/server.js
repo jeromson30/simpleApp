@@ -1346,6 +1346,288 @@ app.get('/api/crm/stats', authenticateToken, async (req, res) => {
   }
 });
 
+// ==================== ANALYTICS ====================
+
+// Analytics Overview - Vue d'ensemble complète
+app.get('/api/crm/analytics/overview', authenticateToken, async (req, res) => {
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+    const { period = '30' } = req.query; // period en jours (7, 30, 90, 365)
+
+    const periodDays = parseInt(period);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - periodDays);
+    const startDateISO = startDate.toISOString();
+
+    // Récupérer tous les contacts
+    const contactsUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_contacts`);
+    contactsUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    contactsUrl.searchParams.append('select', 'id,status,created_at');
+
+    const contactsResponse = await fetch(contactsUrl.toString(), { headers: supabaseHeaders });
+    const contacts = await contactsResponse.json();
+
+    // Récupérer tous les devis
+    const quotesUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    quotesUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    quotesUrl.searchParams.append('select', 'id,status,total,created_at');
+
+    const quotesResponse = await fetch(quotesUrl.toString(), { headers: supabaseHeaders });
+    const quotes = await quotesResponse.json();
+
+    // Récupérer les interactions
+    const interactionsUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_interactions`);
+    interactionsUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    interactionsUrl.searchParams.append('select', 'id,created_at');
+
+    const interactionsResponse = await fetch(interactionsUrl.toString(), { headers: supabaseHeaders });
+    const interactions = await interactionsResponse.json();
+
+    // Filtrer par période
+    const contactsInPeriod = contacts.filter(c => new Date(c.created_at) >= startDate);
+    const quotesInPeriod = quotes.filter(q => new Date(q.created_at) >= startDate);
+    const interactionsInPeriod = interactions.filter(i => new Date(i.created_at) >= startDate);
+
+    // Calculer les stats
+    const totalContacts = contacts.length;
+    const totalProspects = contacts.filter(c => c.status === 'prospect').length;
+    const totalClients = contacts.filter(c => c.status === 'client').length;
+    const totalLost = contacts.filter(c => c.status === 'perdu').length;
+
+    const conversionRate = totalContacts > 0
+      ? ((totalClients / totalContacts) * 100).toFixed(1)
+      : 0;
+
+    // Stats devis
+    const totalQuotes = quotes.length;
+    const draftQuotes = quotes.filter(q => q.status === 'draft').length;
+    const sentQuotes = quotes.filter(q => q.status === 'sent').length;
+    const acceptedQuotes = quotes.filter(q => q.status === 'accepted').length;
+    const rejectedQuotes = quotes.filter(q => q.status === 'rejected').length;
+
+    // Calculs revenus
+    const totalRevenue = quotes
+      .filter(q => q.status === 'accepted')
+      .reduce((sum, q) => sum + (parseFloat(q.total) || 0), 0);
+
+    const potentialRevenue = quotes
+      .filter(q => q.status === 'sent')
+      .reduce((sum, q) => sum + (parseFloat(q.total) || 0), 0);
+
+    const averageQuoteValue = totalQuotes > 0
+      ? (quotes.reduce((sum, q) => sum + (parseFloat(q.total) || 0), 0) / totalQuotes).toFixed(2)
+      : 0;
+
+    // Nouveaux éléments dans la période
+    const newContactsInPeriod = contactsInPeriod.length;
+    const newQuotesInPeriod = quotesInPeriod.length;
+    const newInteractionsInPeriod = interactionsInPeriod.length;
+
+    res.json({
+      period: periodDays,
+      contacts: {
+        total: totalContacts,
+        prospects: totalProspects,
+        clients: totalClients,
+        lost: totalLost,
+        conversionRate: parseFloat(conversionRate),
+        newInPeriod: newContactsInPeriod
+      },
+      quotes: {
+        total: totalQuotes,
+        draft: draftQuotes,
+        sent: sentQuotes,
+        accepted: acceptedQuotes,
+        rejected: rejectedQuotes,
+        newInPeriod: newQuotesInPeriod,
+        acceptanceRate: sentQuotes + acceptedQuotes > 0
+          ? ((acceptedQuotes / (sentQuotes + acceptedQuotes)) * 100).toFixed(1)
+          : 0
+      },
+      revenue: {
+        total: totalRevenue.toFixed(2),
+        potential: potentialRevenue.toFixed(2),
+        average: averageQuoteValue
+      },
+      interactions: {
+        total: interactions.length,
+        newInPeriod: newInteractionsInPeriod
+      }
+    });
+
+  } catch (error) {
+    console.error('Erreur analytics overview:', error);
+    res.status(500).json({ error: 'Erreur chargement analytics' });
+  }
+});
+
+// Analytics Revenue - Évolution du CA par mois
+app.get('/api/crm/analytics/revenue', authenticateToken, async (req, res) => {
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+    const { months = '12' } = req.query;
+
+    const monthsCount = parseInt(months);
+
+    // Récupérer tous les devis acceptés
+    const quotesUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    quotesUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    quotesUrl.searchParams.append('status', `eq.accepted`);
+    quotesUrl.searchParams.append('select', 'total,created_at');
+
+    const response = await fetch(quotesUrl.toString(), { headers: supabaseHeaders });
+    const quotes = await response.json();
+
+    // Regrouper par mois
+    const monthlyRevenue = {};
+    const now = new Date();
+
+    // Initialiser les mois
+    for (let i = monthsCount - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyRevenue[monthKey] = {
+        month: monthKey,
+        monthLabel: date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }),
+        revenue: 0,
+        count: 0
+      };
+    }
+
+    // Calculer les revenus par mois
+    quotes.forEach(quote => {
+      const date = new Date(quote.created_at);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+      if (monthlyRevenue[monthKey]) {
+        monthlyRevenue[monthKey].revenue += parseFloat(quote.total) || 0;
+        monthlyRevenue[monthKey].count += 1;
+      }
+    });
+
+    res.json({
+      data: Object.values(monthlyRevenue).map(m => ({
+        ...m,
+        revenue: parseFloat(m.revenue.toFixed(2))
+      }))
+    });
+
+  } catch (error) {
+    console.error('Erreur analytics revenue:', error);
+    res.status(500).json({ error: 'Erreur chargement revenus' });
+  }
+});
+
+// Analytics Conversion - Taux de conversion par statut
+app.get('/api/crm/analytics/conversion', authenticateToken, async (req, res) => {
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+
+    // Récupérer tous les contacts avec leur date de création
+    const contactsUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_contacts`);
+    contactsUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    contactsUrl.searchParams.append('select', 'id,status,created_at');
+
+    const response = await fetch(contactsUrl.toString(), { headers: supabaseHeaders });
+    const contacts = await response.json();
+
+    // Calculer le temps moyen de conversion (prospect -> client)
+    const clients = contacts.filter(c => c.status === 'client');
+    const prospects = contacts.filter(c => c.status === 'prospect');
+    const lost = contacts.filter(c => c.status === 'perdu');
+
+    // Pour le temps moyen, on estime en fonction de la date de création
+    // (dans une vraie app, il faudrait tracker les changements de statut)
+    const avgConversionTime = clients.length > 0
+      ? Math.round(clients.reduce((sum, c) => {
+          const daysSinceCreation = Math.floor((new Date() - new Date(c.created_at)) / (1000 * 60 * 60 * 24));
+          return sum + daysSinceCreation;
+        }, 0) / clients.length)
+      : 0;
+
+    res.json({
+      funnel: [
+        { stage: 'Prospects', count: prospects.length, percentage: 100 },
+        {
+          stage: 'Clients',
+          count: clients.length,
+          percentage: contacts.length > 0 ? ((clients.length / contacts.length) * 100).toFixed(1) : 0
+        },
+        {
+          stage: 'Perdus',
+          count: lost.length,
+          percentage: contacts.length > 0 ? ((lost.length / contacts.length) * 100).toFixed(1) : 0
+        }
+      ],
+      avgConversionDays: avgConversionTime,
+      conversionRate: contacts.length > 0
+        ? ((clients.length / contacts.length) * 100).toFixed(1)
+        : 0
+    });
+
+  } catch (error) {
+    console.error('Erreur analytics conversion:', error);
+    res.status(500).json({ error: 'Erreur chargement conversion' });
+  }
+});
+
+// Analytics Top Contacts - Top contacts par CA
+app.get('/api/crm/analytics/top-contacts', authenticateToken, async (req, res) => {
+  try {
+    const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
+    const { limit = '5' } = req.query;
+
+    // Récupérer tous les contacts
+    const contactsUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_contacts`);
+    contactsUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    contactsUrl.searchParams.append('select', 'id,name,email,company,status');
+
+    const contactsResponse = await fetch(contactsUrl.toString(), { headers: supabaseHeaders });
+    const contacts = await contactsResponse.json();
+
+    // Récupérer tous les devis acceptés
+    const quotesUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_quotes`);
+    quotesUrl.searchParams.append('owner_id', `eq.${ownerId}`);
+    quotesUrl.searchParams.append('status', `eq.accepted`);
+    quotesUrl.searchParams.append('select', 'contact_id,total');
+
+    const quotesResponse = await fetch(quotesUrl.toString(), { headers: supabaseHeaders });
+    const quotes = await quotesResponse.json();
+
+    // Calculer le CA par contact
+    const contactRevenue = {};
+    quotes.forEach(quote => {
+      if (quote.contact_id) {
+        if (!contactRevenue[quote.contact_id]) {
+          contactRevenue[quote.contact_id] = 0;
+        }
+        contactRevenue[quote.contact_id] += parseFloat(quote.total) || 0;
+      }
+    });
+
+    // Enrichir les contacts avec leur CA
+    const contactsWithRevenue = contacts
+      .map(contact => ({
+        ...contact,
+        revenue: contactRevenue[contact.id] || 0
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, parseInt(limit))
+      .map(c => ({
+        ...c,
+        revenue: parseFloat(c.revenue.toFixed(2))
+      }));
+
+    res.json({
+      topContacts: contactsWithRevenue
+    });
+
+  } catch (error) {
+    console.error('Erreur analytics top contacts:', error);
+    res.status(500).json({ error: 'Erreur chargement top contacts' });
+  }
+});
+
 // ==================== LICENSES ====================
 
 app.get('/api/crm/licenses', (req, res) => {

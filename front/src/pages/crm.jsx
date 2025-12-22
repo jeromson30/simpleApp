@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw, Settings } from 'lucide-react';
+import Dashboard from './Dashboard';
 import '../App.css';
 
 // Configuration API
@@ -1593,8 +1594,13 @@ export function CRM({ onLogin, onLogout }) {
 
         {/* Routes */}
         <Routes>
-          {/* Redirect root to contacts */}
-          <Route path="/" element={<Navigate to="/crm/contacts" replace />} />
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/crm/dashboard" replace />} />
+
+          {/* Dashboard Route */}
+          <Route path="/dashboard" element={
+            <Dashboard API_BASE={API_BASE} AuthService={AuthService} />
+          } />
 
           {/* Contacts Route */}
           <Route path="/contacts" element={
