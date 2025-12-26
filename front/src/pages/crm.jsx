@@ -1801,15 +1801,7 @@ export function CRM({ onLogin, onLogout }) {
                     </div>
 
                     {quoteFormData.items.map((item, index) => (
-                      <div key={index} style={{
-                        display: 'grid',
-                        gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
-                        gap: '0.5rem',
-                        marginBottom: '0.5rem',
-                        padding: '0.75rem',
-                        background: 'rgba(255,255,255,0.03)',
-                        borderRadius: '8px'
-                      }}>
+                      <div key={index} className="quote-item-grid" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr auto' }}>
                         <input
                           type="text"
                           placeholder="Description*"
@@ -1836,14 +1828,14 @@ export function CRM({ onLogin, onLogout }) {
                           style={{ margin: 0 }}
                           step="0.01"
                         />
-                        <div style={{
+                        <div className="quote-item-total" style={{
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           color: 'rgba(255,255,255,0.9)',
                           fontWeight: '500'
                         }}>
-                          {item.total.toFixed(2)}€
+                          Total: {item.total.toFixed(2)}€
                         </div>
                         {quoteFormData.items.length > 1 && (
                           <button
