@@ -4340,6 +4340,148 @@ table {
    DASHBOARD ANALYTICS STYLES
    ============================================ */
 
+/* Quote items grid - Responsive */
+.quote-item-grid {
+  display: grid;
+  gridTemplateColumns: 2fr 1fr 1fr 1fr auto;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .quote-item-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .quote-item-grid input[type="text"],
+  .quote-item-grid input[type="number"] {
+    width: 100% !important;
+  }
+
+  .quote-item-grid .quote-item-total {
+    order: -1;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #10b981 !important;
+    text-align: left !important;
+    padding: 0.5rem;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 6px;
+  }
+
+  .quote-item-grid .crm-btn-delete {
+    width: 100%;
+  }
+
+  /* Form actions responsive */
+  .crm-form-actions {
+    flex-direction: column !important;
+  }
+
+  .crm-form-actions button {
+    width: 100% !important;
+  }
+
+  /* Contact actions responsive */
+  .crm-contact-actions {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .crm-contact-actions button {
+    flex: 1 1 calc(50% - 0.25rem) !important;
+    min-width: 120px !important;
+  }
+
+  /* Stats row responsive */
+  .stats-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Inputs responsive optimizations */
+  .crm-form-input,
+  .crm-form-select,
+  .crm-form-textarea,
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* Évite le zoom automatique sur iOS */
+    padding: 0.875rem 1rem !important;
+    width: 100% !important; /* Force pleine largeur */
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .crm-form-textarea,
+  textarea {
+    min-height: 120px !important;
+  }
+
+  /* Select options plus grands sur mobile */
+  .crm-form-select,
+  select {
+    background-size: 20px !important;
+    padding-right: 2.5rem !important;
+  }
+
+  /* Meilleure visibilité des placeholders */
+  .crm-form-input::placeholder,
+  .crm-form-textarea::placeholder,
+  input::placeholder,
+  textarea::placeholder {
+    font-size: 15px !important;
+  }
+
+  /* Input number - Améliorer les contrôles sur mobile */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 40px;
+  }
+
+  /* Boutons - Fix positionnement et largeur */
+  .crm-button-add,
+  .crm-button-export {
+    width: 100% !important;
+    flex: none !important;
+    white-space: normal !important;
+    min-height: 48px !important;
+  }
+
+  /* Toolbar actions - Stack verticalement */
+  .crm-action-buttons {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.75rem !important;
+  }
+
+  .crm-action-buttons button {
+    width: 100% !important;
+  }
+
+  /* Headers de sections avec boutons */
+  div[style*="display: flex"][style*="justifyContent: space-between"] {
+    flex-wrap: wrap !important;
+    gap: 0.75rem !important;
+  }
+
+  div[style*="display: flex"][style*="justifyContent: space-between"] button {
+    flex: 1 1 100% !important;
+  }
+}
+
+/* ============================================
+   DASHBOARD ANALYTICS STYLES
+   ============================================ */
+
 .dashboard-container {
   padding: 2rem;
   background: transparent;
