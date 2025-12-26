@@ -4401,6 +4401,41 @@ table {
   .stats-row {
     grid-template-columns: 1fr !important;
   }
+
+  /* Inputs responsive optimizations */
+  .crm-form-input,
+  .crm-form-select,
+  .crm-form-textarea {
+    font-size: 16px !important; /* Évite le zoom automatique sur iOS */
+    padding: 0.875rem 1rem !important;
+  }
+
+  .crm-form-textarea {
+    min-height: 120px !important;
+  }
+
+  /* Select options plus grands sur mobile */
+  .crm-form-select {
+    background-size: 20px !important;
+    padding-right: 2.5rem !important;
+  }
+
+  /* Meilleure visibilité des placeholders */
+  .crm-form-input::placeholder,
+  .crm-form-textarea::placeholder {
+    font-size: 15px !important;
+  }
+
+  /* Input number - Améliorer les contrôles sur mobile */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 40px;
+  }
 }
 
 /* ============================================
