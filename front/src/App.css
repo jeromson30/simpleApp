@@ -4468,13 +4468,26 @@ table {
   }
 
   /* Headers de sections avec boutons */
-  div[style*="display: flex"][style*="justifyContent: space-between"] {
-    flex-wrap: wrap !important;
+  div[style*="display: flex"][style*="justifyContent: space-between"],
+  div[style*="display: flex"][style*="justify-content: space-between"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
     gap: 0.75rem !important;
   }
 
-  div[style*="display: flex"][style*="justifyContent: space-between"] button {
-    flex: 1 1 100% !important;
+  div[style*="display: flex"][style*="justifyContent: space-between"] label,
+  div[style*="display: flex"][style*="justify-content: space-between"] label {
+    width: 100% !important;
+    text-align: left !important;
+  }
+
+  div[style*="display: flex"][style*="justifyContent: space-between"] button,
+  div[style*="display: flex"][style*="justify-content: space-between"] button,
+  div[style*="display: flex"][style*="justifyContent: space-between"] .crm-button-add,
+  div[style*="display: flex"][style*="justify-content: space-between"] .crm-button-add {
+    flex: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 
