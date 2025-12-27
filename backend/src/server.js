@@ -1809,15 +1809,50 @@ app.get('/api/crm/email-templates', authenticateToken, async (req, res) => {
   try {
     const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
 
+    // Récupérer tous les templates et filtrer côté serveur
+    // Car le filtre OR de Supabase peut être problématique
     const url = new URL(`${SUPABASE_URL}/rest/v1/crm_email_templates`);
-    url.searchParams.append('or', `(owner_id.eq.${ownerId},is_default.eq.true)`);
     url.searchParams.append('select', '*');
     url.searchParams.append('order', 'category,name');
 
+    console.log('Fetching templates from:', url.toString());
     const response = await fetch(url.toString(), { headers: supabaseHeaders });
-    const templates = await response.json();
 
-    // Parser les variables JSON
+    // Vérifier si la réponse est OK
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Erreur Supabase email-templates:', response.status, errorText);
+
+      // Si la table n'existe pas, renvoyer un tableau vide avec un warning
+      if (response.status === 404 || errorText.includes('relation') || errorText.includes('does not exist')) {
+        console.warn('⚠️  Table crm_email_templates non trouvée. Veuillez exécuter emails_schema.sql dans Supabase.');
+        return res.json([]);
+      }
+
+      return res.status(response.status).json({
+        error: 'Erreur Supabase',
+        details: errorText,
+        hint: 'Avez-vous exécuté emails_schema.sql dans Supabase ?'
+      });
+    }
+
+    const allTemplates = await response.json();
+    console.log('Templates reçus:', allTemplates.length);
+
+    // Filtrer les templates : ceux de l'owner ou les templates par défaut
+    const templates = allTemplates.filter(t =>
+      t.owner_id === ownerId || t.is_default === true
+    );
+
+    console.log('Templates filtrés:', templates.length);
+
+    // Si pas de templates, retourner tableau vide
+    if (!templates || templates.length === 0) {
+      console.warn('⚠️  Aucun template trouvé pour owner_id:', ownerId);
+      return res.json([]);
+    }
+
+    // Parser les variables JSON si nécessaire
     const parsedTemplates = templates.map(t => ({
       ...t,
       variables: typeof t.variables === 'string' ? JSON.parse(t.variables) : t.variables
@@ -1827,7 +1862,12 @@ app.get('/api/crm/email-templates', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Erreur récupération templates:', error);
-    res.status(500).json({ error: 'Erreur chargement templates' });
+    console.error('Stack:', error.stack);
+    res.status(500).json({
+      error: 'Erreur chargement templates',
+      message: error.message,
+      hint: 'Vérifiez que la table crm_email_templates existe dans Supabase'
+    });
   }
 });
 
