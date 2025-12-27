@@ -197,9 +197,13 @@ CREATE TABLE crm_emails (
   subject TEXT NOT NULL,
   body TEXT NOT NULL,
   template_id INTEGER REFERENCES crm_email_templates(id) ON DELETE SET NULL,
-  status TEXT DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'opened', 'failed')),
+  status TEXT DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'opened', 'failed', 'pending_retry')),
   sent_at TIMESTAMPTZ DEFAULT NOW(),
   opened_at TIMESTAMPTZ,
+  retry_count INTEGER DEFAULT 0,
+  max_retries INTEGER DEFAULT 3,
+  next_retry_at TIMESTAMPTZ,
+  last_error TEXT,
   metadata JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -211,6 +215,7 @@ CREATE INDEX idx_crm_emails_sender ON crm_emails(sender_id);
 CREATE INDEX idx_crm_emails_template ON crm_emails(template_id);
 CREATE INDEX idx_crm_emails_status ON crm_emails(status);
 CREATE INDEX idx_crm_emails_sent_at ON crm_emails(sent_at DESC);
+CREATE INDEX idx_crm_emails_retry ON crm_emails(next_retry_at) WHERE status = 'pending_retry';
 
 -- =====================================================
 -- TABLE: crm_notifications
@@ -234,6 +239,29 @@ CREATE INDEX idx_crm_notifications_owner ON crm_notifications(owner_id);
 CREATE INDEX idx_crm_notifications_type ON crm_notifications(type);
 CREATE INDEX idx_crm_notifications_read ON crm_notifications(is_read);
 CREATE INDEX idx_crm_notifications_created_at ON crm_notifications(created_at DESC);
+
+-- =====================================================
+-- TABLE: crm_settings (Configuration système)
+-- =====================================================
+
+CREATE TABLE crm_settings (
+  id SERIAL PRIMARY KEY,
+  key TEXT UNIQUE NOT NULL,
+  value TEXT NOT NULL,
+  description TEXT,
+  category TEXT DEFAULT 'general',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_crm_settings_key ON crm_settings(key);
+CREATE INDEX idx_crm_settings_category ON crm_settings(category);
+
+-- Insérer les paramètres par défaut
+INSERT INTO crm_settings (key, value, description, category) VALUES
+('email_retry_interval_minutes', '15', 'Intervalle en minutes entre chaque tentative de renvoi d''email', 'email'),
+('email_max_retries', '3', 'Nombre maximum de tentatives de renvoi d''email', 'email'),
+('smtp_enabled', 'false', 'Activer l''envoi SMTP d''emails', 'email');
 
 -- =====================================================
 -- TRIGGERS: Auto-update updated_at
