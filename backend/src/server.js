@@ -1663,6 +1663,31 @@ app.get('/api/crm/analytics/top-contacts', authenticateToken, async (req, res) =
 
 // ==================== EMAILS ====================
 
+// Helper: Récupérer un setting depuis la DB
+async function getSetting(key, defaultValue = null) {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_settings`);
+    url.searchParams.append('key', `eq.${key}`);
+    url.searchParams.append('select', 'value');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+    if (response.ok) {
+      const data = await response.json();
+      return data[0]?.value || defaultValue;
+    }
+  } catch (error) {
+    console.error(`Erreur récupération setting ${key}:`, error);
+  }
+  return defaultValue;
+}
+
+// Helper: Calculer la prochaine date de retry
+function calculateNextRetry(retryCount, intervalMinutes = 15) {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + intervalMinutes);
+  return now.toISOString();
+}
+
 // Fonction d'envoi d'email via SMTP
 async function sendEmailViaSMTP(to, subject, htmlBody, textBody = null) {
   if (!emailTransporter) {
@@ -1688,6 +1713,96 @@ async function sendEmailViaSMTP(to, subject, htmlBody, textBody = null) {
   }
 }
 
+// Fonction de retry automatique des emails échoués
+async function retryFailedEmails() {
+  try {
+    console.log('🔄 Vérification des emails à renvoyer...');
+
+    // Récupérer les emails à retry
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_emails`);
+    url.searchParams.append('status', 'eq.pending_retry');
+    url.searchParams.append('next_retry_at', `lte.${new Date().toISOString()}`);
+    url.searchParams.append('select', '*');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+
+    if (!response.ok) {
+      console.error('Erreur récupération emails à retry');
+      return;
+    }
+
+    const emailsToRetry = await response.json();
+
+    if (!emailsToRetry || emailsToRetry.length === 0) {
+      console.log('Aucun email à renvoyer');
+      return;
+    }
+
+    console.log(`📬 ${emailsToRetry.length} email(s) à renvoyer`);
+
+    // Récupérer l'intervalle de retry
+    const retryIntervalMinutes = parseInt(await getSetting('email_retry_interval_minutes', '15'));
+
+    // Traiter chaque email
+    for (const email of emailsToRetry) {
+      console.log(`🔄 Tentative ${email.retry_count + 1}/${email.max_retries} pour email #${email.id}`);
+
+      // Tenter de renvoyer
+      const result = await sendEmailViaSMTP(
+        email.recipient_email,
+        email.subject,
+        email.body.replace(/\n/g, '<br>')
+      );
+
+      let updateData = {
+        retry_count: email.retry_count + 1,
+        updated_at: new Date().toISOString()
+      };
+
+      if (result.success) {
+        // Succès!
+        updateData.status = 'delivered';
+        updateData.next_retry_at = null;
+        updateData.last_error = null;
+        updateData.metadata = {
+          ...email.metadata,
+          retry_success: true,
+          retry_attempt: email.retry_count + 1
+        };
+        console.log(`✅ Email #${email.id} envoyé avec succès après ${email.retry_count + 1} tentative(s)`);
+      } else {
+        // Échec
+        updateData.last_error = result.reason;
+
+        if (email.retry_count + 1 >= email.max_retries) {
+          // Max retries atteint
+          updateData.status = 'failed';
+          updateData.next_retry_at = null;
+          console.log(`❌ Email #${email.id} échoué après ${email.max_retries} tentatives`);
+        } else {
+          // Programmer un nouveau retry
+          updateData.next_retry_at = calculateNextRetry(email.retry_count + 1, retryIntervalMinutes);
+          console.log(`⏰ Nouvelle tentative pour email #${email.id} dans ${retryIntervalMinutes} minutes`);
+        }
+      }
+
+      // Mettre à jour l'email dans la DB
+      const updateUrl = new URL(`${SUPABASE_URL}/rest/v1/crm_emails`);
+      updateUrl.searchParams.append('id', `eq.${email.id}`);
+
+      await fetch(updateUrl.toString(), {
+        method: 'PATCH',
+        headers: supabaseHeaders,
+        body: JSON.stringify(updateData)
+      });
+    }
+
+    console.log('✅ Traitement des retries terminé');
+  } catch (error) {
+    console.error('❌ Erreur lors du retry des emails:', error);
+  }
+}
+
 // Send an email
 app.post('/api/crm/emails', authenticateToken, async (req, res) => {
   const {
@@ -1709,9 +1824,15 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
 
     console.log('📤 Tentative envoi email à:', recipient_email);
 
+    // Récupérer les settings de retry
+    const retryIntervalMinutes = parseInt(await getSetting('email_retry_interval_minutes', '15'));
+    const maxRetries = parseInt(await getSetting('email_max_retries', '3'));
+
     // Tenter d'envoyer l'email via SMTP
     let emailStatus = 'sent';
     let smtpResult = null;
+    let nextRetryAt = null;
+    let lastError = null;
 
     if (emailTransporter) {
       smtpResult = await sendEmailViaSMTP(
@@ -1724,8 +1845,11 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
         emailStatus = 'delivered';
         console.log('✅ Email délivré avec succès');
       } else {
-        emailStatus = 'failed';
+        emailStatus = 'pending_retry';
+        lastError = smtpResult.reason;
+        nextRetryAt = calculateNextRetry(0, retryIntervalMinutes);
         console.error('❌ Échec envoi email:', smtpResult.reason);
+        console.log(`🔄 Retry programmé dans ${retryIntervalMinutes} minutes`);
       }
     }
 
@@ -1741,6 +1865,10 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
       template_id: template_id || null,
       status: emailStatus,
       sent_at: new Date().toISOString(),
+      retry_count: 0,
+      max_retries: maxRetries,
+      next_retry_at: nextRetryAt,
+      last_error: lastError,
       metadata: {
         smtp_configured: !!emailTransporter,
         smtp_result: smtpResult ? smtpResult.reason : null,
@@ -2899,6 +3027,87 @@ app.get('/api/bf6/player-stats', async (req, res) => {
     playtimeHours: Math.floor(Math.random() * 200)
   });
 });
+
+// ==================== SETTINGS API ====================
+
+// Get all settings
+app.get('/api/crm/settings', authenticateToken, async (req, res) => {
+  try {
+    // Vérifier que l'utilisateur est owner (sécurité)
+    if (!req.user.isOwner) {
+      return res.status(403).json({ error: 'Accès réservé aux propriétaires de compte' });
+    }
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_settings`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'category,key');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+
+    if (response.ok) {
+      const settings = await response.json();
+      res.json(settings);
+    } else {
+      res.status(response.status).json({ error: 'Erreur récupération settings' });
+    }
+  } catch (error) {
+    console.error('Erreur get settings:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Update a setting
+app.patch('/api/crm/settings/:key', authenticateToken, async (req, res) => {
+  const { key } = req.params;
+  const { value } = req.body;
+
+  try {
+    // Vérifier que l'utilisateur est owner (sécurité)
+    if (!req.user.isOwner) {
+      return res.status(403).json({ error: 'Accès réservé aux propriétaires de compte' });
+    }
+
+    if (!value) {
+      return res.status(400).json({ error: 'Valeur requise' });
+    }
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_settings`);
+    url.searchParams.append('key', `eq.${key}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: {
+        ...supabaseHeaders,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        value: value.toString(),
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    if (response.ok) {
+      const updated = await response.json();
+      console.log(`⚙️ Setting ${key} mis à jour: ${value}`);
+      res.json(updated[0] || { key, value });
+    } else {
+      res.status(response.status).json({ error: 'Erreur mise à jour setting' });
+    }
+  } catch (error) {
+    console.error('Erreur update setting:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ==================== CRON JOBS ====================
+
+// Vérifier les emails à renvoyer toutes les minutes
+// (L'intervalle réel entre tentatives est configuré dans crm_settings)
+cron.schedule('* * * * *', () => {
+  retryFailedEmails();
+});
+
+console.log('⏰ Cron job de retry d\'emails activé (vérification chaque minute)');
 
 // ==================== START SERVER ====================
 
