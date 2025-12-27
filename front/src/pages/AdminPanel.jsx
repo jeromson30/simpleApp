@@ -76,10 +76,9 @@ const ApiService = {
   updateNews: (id, data) => ApiService.request(`/content/news/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteNews: (id) => ApiService.request(`/content/news/${id}`, { method: 'DELETE' }),
   reorderNews: (items) => ApiService.request('/content/news/reorder', { method: 'POST', body: JSON.stringify({ items }) }),
-  getSettings: () => fetch('/api/crm/settings', { headers: AuthService.getAuthHeaders() }),
-  updateSetting: (key, value) => fetch(`/api/crm/settings/${key}`, {
+  getSettings: () => ApiService.request('/settings'),
+  updateSetting: (key, value) => ApiService.request(`/settings/${key}`, {
     method: 'PATCH',
-    headers: AuthService.getAuthHeaders(),
     body: JSON.stringify({ value })
   })
 };
