@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,6 +14,28 @@ const JWT_SECRET = process.env.JWT_SECRET || 'votre_secret_jwt_super_securise_a_
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uaptwsvwucgyybsjknqx.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'votre_clé_supabase';
+
+// Configuration SMTP pour l'envoi d'emails
+const SMTP_CONFIG = {
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  auth: process.env.SMTP_USER && process.env.SMTP_PASS ? {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  } : null
+};
+
+const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER;
+
+// Créer le transporter nodemailer
+let emailTransporter = null;
+if (SMTP_CONFIG.host && SMTP_CONFIG.auth) {
+  emailTransporter = nodemailer.createTransport(SMTP_CONFIG);
+  console.log('📧 Configuration SMTP activée:', SMTP_CONFIG.host);
+} else {
+  console.warn('⚠️  SMTP non configuré - les emails seront seulement stockés dans la DB');
+}
 
 // Middleware
 app.use(cors());
@@ -1639,6 +1662,31 @@ app.get('/api/crm/analytics/top-contacts', authenticateToken, async (req, res) =
 
 // ==================== EMAILS ====================
 
+// Fonction d'envoi d'email via SMTP
+async function sendEmailViaSMTP(to, subject, htmlBody, textBody = null) {
+  if (!emailTransporter) {
+    console.warn('⚠️  Transporter SMTP non configuré, email non envoyé');
+    return { success: false, reason: 'SMTP non configuré' };
+  }
+
+  try {
+    const mailOptions = {
+      from: SMTP_FROM,
+      to: to,
+      subject: subject,
+      text: textBody || htmlBody.replace(/<[^>]*>/g, ''), // Fallback texte sans HTML
+      html: htmlBody
+    };
+
+    const info = await emailTransporter.sendMail(mailOptions);
+    console.log('📧 Email envoyé avec succès:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Erreur envoi SMTP:', error.message);
+    return { success: false, reason: error.message };
+  }
+}
+
 // Send an email
 app.post('/api/crm/emails', authenticateToken, async (req, res) => {
   const {
@@ -1658,6 +1706,29 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
   try {
     const ownerId = req.user.isOwner ? req.user.id : req.user.ownerId;
 
+    console.log('📤 Tentative envoi email à:', recipient_email);
+
+    // Tenter d'envoyer l'email via SMTP
+    let emailStatus = 'sent';
+    let smtpResult = null;
+
+    if (emailTransporter) {
+      smtpResult = await sendEmailViaSMTP(
+        recipient_email,
+        subject,
+        body.replace(/\n/g, '<br>')  // Convertir retours à la ligne en HTML
+      );
+
+      if (smtpResult.success) {
+        emailStatus = 'delivered';
+        console.log('✅ Email délivré avec succès');
+      } else {
+        emailStatus = 'failed';
+        console.error('❌ Échec envoi email:', smtpResult.reason);
+      }
+    }
+
+    // Enregistrer dans la base de données
     const newEmail = {
       owner_id: ownerId,
       sender_id: req.user.id,
@@ -1667,12 +1738,15 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
       subject,
       body,
       template_id: template_id || null,
-      status: 'sent',
+      status: emailStatus,
       sent_at: new Date().toISOString(),
+      metadata: {
+        smtp_configured: !!emailTransporter,
+        smtp_result: smtpResult ? smtpResult.reason : null,
+        message_id: smtpResult?.messageId || null
+      },
       created_at: new Date().toISOString()
     };
-
-    console.log('Envoi email:', { recipient_email, subject, owner_id: ownerId });
 
     const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_emails`, {
       method: 'POST',
@@ -1691,7 +1765,7 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
       if (response.status === 404 || errorText.includes('relation') || errorText.includes('does not exist')) {
         return res.status(503).json({
           error: 'Table crm_emails non trouvée',
-          hint: 'Veuillez exécuter emails_schema.sql dans Supabase'
+          hint: 'Veuillez exécuter create_all_tables.sql dans Supabase'
         });
       }
 
@@ -1704,7 +1778,7 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
     const inserted = await response.json();
     const createdEmail = Array.isArray(inserted) ? inserted[0] : inserted;
 
-    console.log('✅ Email créé avec succès:', createdEmail?.id);
+    console.log('💾 Email enregistré dans la DB:', createdEmail?.id);
 
     // Créer une notification
     if (contact_id) {
