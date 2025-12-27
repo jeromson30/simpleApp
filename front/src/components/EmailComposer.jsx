@@ -87,6 +87,11 @@ const EmailComposer = ({
     setLoading(true);
     try {
       const headers = AuthService.getAuthHeaders();
+
+      // Debug: Log contact object structure
+      console.log('🔍 Contact object:', contact);
+      console.log('🔍 Contact ID:', contact?.id, 'Type:', typeof contact?.id);
+
       const payload = {
         contact_id: contact?.id || null,
         recipient_email: emailData.recipient_email,
@@ -95,6 +100,8 @@ const EmailComposer = ({
         body: emailData.body,
         template_id: selectedTemplate?.id || null
       };
+
+      console.log('📤 Payload being sent:', payload);
 
       const response = await fetch(`${API_BASE}/emails`, {
         method: 'POST',
