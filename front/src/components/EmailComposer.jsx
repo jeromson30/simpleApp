@@ -54,21 +54,22 @@ const EmailComposer = ({
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
 
-    // Replace variables in template
+    // Replace variables in template (using {{variable}} syntax)
     let subject = template.subject;
     let body = template.body;
 
     const replacements = {
-      '{contact_name}': contact?.name || '[Nom]',
-      '{company_name}': 'Votre Entreprise',
-      '{sender_name}': AuthService.getUser()?.email?.split('@')[0] || 'Votre nom',
-      '{quote_number}': 'DEVIS-001',
-      '{project_name}': 'Votre projet'
+      '{{contact_name}}': contact?.name || '[Nom]',
+      '{{company_name}}': 'Votre Entreprise',
+      '{{sender_name}}': AuthService.getUser()?.email?.split('@')[0] || 'Votre nom',
+      '{{quote_number}}': 'DEVIS-001',
+      '{{subject}}': '[Sujet]',
+      '{{news_content}}': '[Contenu]'
     };
 
     Object.entries(replacements).forEach(([key, value]) => {
-      subject = subject.replace(new RegExp(key, 'g'), value);
-      body = body.replace(new RegExp(key, 'g'), value);
+      subject = subject.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value);
+      body = body.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value);
     });
 
     setEmailData(prev => ({
