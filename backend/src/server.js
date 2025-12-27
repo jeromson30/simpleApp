@@ -3005,6 +3005,65 @@ app.post('/api/admin/content/news/reorder', authenticateAdmin, async (req, res) 
   }
 });
 
+// Admin - Get all settings
+app.get('/api/admin/settings', authenticateAdmin, async (req, res) => {
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_settings`);
+    url.searchParams.append('select', '*');
+    url.searchParams.append('order', 'category,key');
+
+    const response = await fetch(url.toString(), { headers: supabaseHeaders });
+
+    if (response.ok) {
+      const settings = await response.json();
+      res.json(settings);
+    } else {
+      res.status(response.status).json({ error: 'Erreur récupération settings' });
+    }
+  } catch (error) {
+    console.error('Erreur get settings:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Admin - Update a setting
+app.patch('/api/admin/settings/:key', authenticateAdmin, async (req, res) => {
+  const { key } = req.params;
+  const { value } = req.body;
+
+  try {
+    if (!value && value !== '0') {
+      return res.status(400).json({ error: 'Valeur requise' });
+    }
+
+    const url = new URL(`${SUPABASE_URL}/rest/v1/crm_settings`);
+    url.searchParams.append('key', `eq.${key}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: {
+        ...supabaseHeaders,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        value: value.toString(),
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    if (response.ok) {
+      const updated = await response.json();
+      console.log(`⚙️ [ADMIN] Setting ${key} mis à jour: ${value}`);
+      res.json(updated[0] || { key, value });
+    } else {
+      res.status(response.status).json({ error: 'Erreur mise à jour setting' });
+    }
+  } catch (error) {
+    console.error('Erreur update setting:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ==================== ROUTES EXISTANTES ====================
 
 app.get('/api/data', (req, res) => {
