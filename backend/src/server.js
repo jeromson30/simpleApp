@@ -1663,43 +1663,82 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
       created_at: new Date().toISOString()
     };
 
+    console.log('Envoi email:', { recipient_email, subject, owner_id: ownerId });
+
     const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_emails`, {
       method: 'POST',
-      headers: supabaseHeaders,
+      headers: {
+        ...supabaseHeaders,
+        'Prefer': 'return=representation'
+      },
       body: JSON.stringify(newEmail)
     });
 
     if (!response.ok) {
-      throw new Error('Erreur Supabase');
+      const errorText = await response.text();
+      console.error('Erreur Supabase POST email:', response.status, errorText);
+
+      // Si la table n'existe pas
+      if (response.status === 404 || errorText.includes('relation') || errorText.includes('does not exist')) {
+        return res.status(503).json({
+          error: 'Table crm_emails non trouvée',
+          hint: 'Veuillez exécuter emails_schema.sql dans Supabase'
+        });
+      }
+
+      return res.status(response.status).json({
+        error: 'Erreur Supabase',
+        details: errorText
+      });
     }
 
     const inserted = await response.json();
-    const createdEmail = inserted[0] || newEmail;
+    const createdEmail = Array.isArray(inserted) ? inserted[0] : inserted;
+
+    console.log('✅ Email créé avec succès:', createdEmail?.id);
 
     // Créer une notification
     if (contact_id) {
-      const notification = {
-        user_id: req.user.id,
-        owner_id: ownerId,
-        type: 'email_sent',
-        title: 'Email envoyé',
-        message: `Email envoyé à ${recipient_name || recipient_email}`,
-        link: `/crm/contacts`,
-        created_at: new Date().toISOString()
-      };
+      try {
+        const notification = {
+          user_id: req.user.id,
+          owner_id: ownerId,
+          type: 'email_sent',
+          title: 'Email envoyé',
+          message: `Email envoyé à ${recipient_name || recipient_email}`,
+          link: `/crm/contacts`,
+          created_at: new Date().toISOString()
+        };
 
-      await fetch(`${SUPABASE_URL}/rest/v1/crm_notifications`, {
-        method: 'POST',
-        headers: supabaseHeaders,
-        body: JSON.stringify(notification)
-      });
+        const notifResponse = await fetch(`${SUPABASE_URL}/rest/v1/crm_notifications`, {
+          method: 'POST',
+          headers: {
+            ...supabaseHeaders,
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(notification)
+        });
+
+        if (!notifResponse.ok) {
+          console.warn('⚠️  Notification non créée (table peut-être manquante)');
+        } else {
+          console.log('✅ Notification créée');
+        }
+      } catch (notifError) {
+        console.warn('⚠️  Erreur création notification:', notifError.message);
+        // Continue même si notification échoue
+      }
     }
 
     res.status(201).json(createdEmail);
 
   } catch (error) {
-    console.error('Erreur envoi email:', error);
-    res.status(500).json({ error: 'Erreur envoi email' });
+    console.error('❌ Erreur envoi email:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({
+      error: 'Erreur envoi email',
+      message: error.message
+    });
   }
 });
 
