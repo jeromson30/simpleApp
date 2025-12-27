@@ -75,7 +75,13 @@ const ApiService = {
   createNews: (data) => ApiService.request('/content/news', { method: 'POST', body: JSON.stringify(data) }),
   updateNews: (id, data) => ApiService.request(`/content/news/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteNews: (id) => ApiService.request(`/content/news/${id}`, { method: 'DELETE' }),
-  reorderNews: (items) => ApiService.request('/content/news/reorder', { method: 'POST', body: JSON.stringify({ items }) })
+  reorderNews: (items) => ApiService.request('/content/news/reorder', { method: 'POST', body: JSON.stringify({ items }) }),
+  getSettings: () => fetch('/api/crm/settings', { headers: AuthService.getAuthHeaders() }),
+  updateSetting: (key, value) => fetch(`/api/crm/settings/${key}`, {
+    method: 'PATCH',
+    headers: AuthService.getAuthHeaders(),
+    body: JSON.stringify({ value })
+  })
 };
 
 const getIconByName = (name) => AVAILABLE_ICONS.find(i => i.name === name)?.component || Zap;
@@ -101,6 +107,13 @@ function AdminPanel() {
   const [carouselForm, setCarouselForm] = useState({ icon: 'Zap', title: '', description: '', cta_text: 'En savoir plus →', cta_link: '/crm', color: '#64c8ff' });
   const [newsForm, setNewsForm] = useState({ title: '', description: '', date: '', image: '📰', category: 'Actualité', link: '#' });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settings, setSettings] = useState([]);
+  const [settingsForm, setSettingsForm] = useState({
+    email_retry_interval_minutes: '15',
+    email_max_retries: '3'
+  });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsMessage, setSettingsMessage] = useState(null);
 
   useEffect(() => {
     if (AuthService.isAuthenticated()) {
@@ -115,13 +128,24 @@ function AdminPanel() {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
-      const [usersRes, statsRes, carouselRes, newsRes] = await Promise.all([
-        ApiService.getAllUsers(), ApiService.getAdminStats(), ApiService.getCarousel(), ApiService.getNews()
+      const [usersRes, statsRes, carouselRes, newsRes, settingsRes] = await Promise.all([
+        ApiService.getAllUsers(), ApiService.getAdminStats(), ApiService.getCarousel(), ApiService.getNews(), ApiService.getSettings()
       ]);
       if (usersRes.ok) setUsers(await usersRes.json());
       if (statsRes.ok) setStats(await statsRes.json());
       if (carouselRes.ok) setCarouselSlides(await carouselRes.json());
       if (newsRes.ok) setNewsItems(await newsRes.json());
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        setSettings(settingsData);
+        // Update form with current values
+        const retryInterval = settingsData.find(s => s.key === 'email_retry_interval_minutes');
+        const maxRetries = settingsData.find(s => s.key === 'email_max_retries');
+        setSettingsForm({
+          email_retry_interval_minutes: retryInterval?.value || '15',
+          email_max_retries: maxRetries?.value || '3'
+        });
+      }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, [isAuthenticated]);
@@ -241,6 +265,46 @@ function AdminPanel() {
     [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
     setNewsItems(newItems);
     await ApiService.reorderNews(newItems.map((n, i) => ({ id: n.id, sort_order: i })));
+  };
+
+  const handleSaveSettings = async () => {
+    setSettingsSaving(true);
+    setSettingsMessage(null);
+    try {
+      // Validate input
+      const retryInterval = parseInt(settingsForm.email_retry_interval_minutes);
+      const maxRetries = parseInt(settingsForm.email_max_retries);
+
+      if (isNaN(retryInterval) || retryInterval < 1) {
+        setSettingsMessage({ type: 'error', text: 'L\'intervalle doit être au moins 1 minute' });
+        setSettingsSaving(false);
+        return;
+      }
+      if (isNaN(maxRetries) || maxRetries < 1 || maxRetries > 10) {
+        setSettingsMessage({ type: 'error', text: 'Le nombre de tentatives doit être entre 1 et 10' });
+        setSettingsSaving(false);
+        return;
+      }
+
+      // Save both settings
+      const [res1, res2] = await Promise.all([
+        ApiService.updateSetting('email_retry_interval_minutes', retryInterval.toString()),
+        ApiService.updateSetting('email_max_retries', maxRetries.toString())
+      ]);
+
+      if (res1.ok && res2.ok) {
+        setSettingsMessage({ type: 'success', text: '✅ Paramètres enregistrés avec succès' });
+        // Reload settings to confirm
+        await loadData();
+      } else {
+        setSettingsMessage({ type: 'error', text: 'Erreur lors de la sauvegarde' });
+      }
+    } catch (error) {
+      console.error('Erreur save settings:', error);
+      setSettingsMessage({ type: 'error', text: 'Erreur serveur' });
+    } finally {
+      setSettingsSaving(false);
+    }
   };
 
   const filteredUsers = users.filter(u => u.email?.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -625,11 +689,90 @@ function AdminPanel() {
 
           {/* Settings */}
           {activeSection === 'settings' && (
-            <div className="admin-card">
-              <h3 className="admin-card-title">Informations Admin</h3>
-              <p style={{ color: 'rgba(255,255,255,0.7)' }}><strong style={{ color: 'white' }}>Email:</strong> {adminUser?.email}</p>
-              <p style={{ color: 'rgba(255,255,255,0.7)' }}><strong style={{ color: 'white' }}>Rôle:</strong> Super Administrateur</p>
-            </div>
+            <>
+              <div className="admin-card">
+                <h3 className="admin-card-title">Informations Admin</h3>
+                <p style={{ color: 'rgba(255,255,255,0.7)' }}><strong style={{ color: 'white' }}>Email:</strong> {adminUser?.email}</p>
+                <p style={{ color: 'rgba(255,255,255,0.7)' }}><strong style={{ color: 'white' }}>Rôle:</strong> Super Administrateur</p>
+              </div>
+
+              <div className="admin-card" style={{ marginTop: '1.5rem' }}>
+                <h3 className="admin-card-title" style={{ marginBottom: '1rem' }}>⚙️ Configuration des Emails</h3>
+
+                {settingsMessage && (
+                  <div style={{
+                    padding: '0.75rem 1rem',
+                    borderRadius: '8px',
+                    marginBottom: '1rem',
+                    background: settingsMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    border: `1px solid ${settingsMessage.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                    color: settingsMessage.type === 'success' ? '#10b981' : '#ef4444'
+                  }}>
+                    {settingsMessage.text}
+                  </div>
+                )}
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label className="admin-form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
+                    Intervalle de retry (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="1440"
+                    className="admin-input"
+                    value={settingsForm.email_retry_interval_minutes}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, email_retry_interval_minutes: e.target.value })}
+                    placeholder="15"
+                  />
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginTop: '0.5rem', marginBottom: 0 }}>
+                    Délai entre chaque tentative de renvoi d'email en cas d'échec (1-1440 minutes)
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label className="admin-form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
+                    Nombre maximum de tentatives
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    className="admin-input"
+                    value={settingsForm.email_max_retries}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, email_max_retries: e.target.value })}
+                    placeholder="3"
+                  />
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginTop: '0.5rem', marginBottom: 0 }}>
+                    Nombre de fois qu'un email en échec sera renvoyé avant d'abandonner (1-10)
+                  </p>
+                </div>
+
+                <div style={{
+                  padding: '1rem',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem'
+                }}>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem' }}>
+                    <strong style={{ color: '#3b82f6' }}>ℹ️ Comment ça marche :</strong><br/>
+                    Lorsqu'un email échoue, le système le marque comme "pending_retry" et programme une nouvelle tentative selon l'intervalle configuré.
+                    Si l'envoi réussit, le statut passe à "delivered". Si toutes les tentatives échouent, le statut devient "failed".
+                  </p>
+                </div>
+
+                <button
+                  className="admin-btn-primary"
+                  onClick={handleSaveSettings}
+                  disabled={settingsSaving}
+                  style={{ width: '100%' }}
+                >
+                  {settingsSaving ? <RefreshCw size={18} className="spinning" /> : <Save size={18} />}
+                  {settingsSaving ? 'Enregistrement...' : 'Enregistrer les paramètres'}
+                </button>
+              </div>
+            </>
           )}
         </div>
       </main>

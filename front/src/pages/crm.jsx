@@ -121,7 +121,8 @@ const ApiService = {
         }
         // Token invalide ou refresh échoué
         AuthService.clearAuth();
-        window.location.reload();
+        alert('Votre session a expiré. Veuillez vous reconnecter.');
+        window.location.href = '/';
         throw new Error('Session expirée');
       }
 
@@ -134,7 +135,7 @@ const ApiService = {
             this.onSuspended(data.error);
           } else {
             alert(data.error);
-            window.location.reload();
+            window.location.href = '/';
           }
           throw new Error(data.error);
         }
@@ -491,6 +492,15 @@ export function CRM({ onLogin, onLogout }) {
     }
   }, [currentUser, loadContacts, loadInteractions, loadQuotes, loadSubAccounts]);
 
+  // Charger l'email sauvegardé si "Se souvenir de moi" était coché
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('crm_remembered_email');
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
   // ==================== AUTH HANDLERS ====================
 
   const handleRegister = async (e) => {
@@ -583,9 +593,16 @@ export function CRM({ onLogin, onLogout }) {
       AuthService.setToken(data.token, rememberMe);
       AuthService.setUser(data.user, rememberMe);
 
+      // Sauvegarder l'email pour auto-complétion si remember me
+      if (rememberMe) {
+        localStorage.setItem('crm_remembered_email', email);
+      } else {
+        localStorage.removeItem('crm_remembered_email');
+      }
+
       setCurrentUser(data.user);
       if (onLogin) onLogin(data.user);
-      
+
       setEmail('');
       setPassword('');
 
