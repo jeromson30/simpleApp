@@ -168,7 +168,7 @@ CREATE INDEX idx_crm_quotes_created_at ON crm_quotes(created_at DESC);
 
 CREATE TABLE crm_email_templates (
   id SERIAL PRIMARY KEY,
-  owner_id INTEGER NOT NULL REFERENCES crm_users(id) ON DELETE CASCADE,
+  owner_id INTEGER REFERENCES crm_users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   subject TEXT NOT NULL,
   body TEXT NOT NULL,

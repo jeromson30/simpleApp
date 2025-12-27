@@ -1878,9 +1878,9 @@ app.get('/api/crm/email-templates', authenticateToken, async (req, res) => {
     const allTemplates = await response.json();
     console.log('Templates reçus:', allTemplates.length);
 
-    // Filtrer les templates : ceux de l'owner ou les templates par défaut
+    // Filtrer les templates : ceux de l'owner, les templates par défaut, ou les templates globaux (owner_id NULL)
     const templates = allTemplates.filter(t =>
-      t.owner_id === ownerId || t.is_default === true
+      t.owner_id === ownerId || t.is_default === true || t.owner_id === null
     );
 
     console.log('Templates filtrés:', templates.length);
