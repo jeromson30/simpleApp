@@ -1373,6 +1373,32 @@ export function CRM({ onLogin, onLogout }) {
           </div>
         )}
 
+        {/* Statistiques de l'équipe */}
+        {currentUser.isOwner && (
+          <div className="crm-stats-grid" style={{ marginBottom: '2rem' }}>
+            <div className="crm-stat-card" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05))' }}>
+              <div className="crm-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.2)' }}>
+                <Users size={24} style={{ color: '#3b82f6' }} />
+              </div>
+              <div className="crm-stat-details">
+                <p className="crm-stat-label">Sous-comptes</p>
+                <h3 className="crm-stat-value">{subAccounts.length}</h3>
+                <p className="crm-stat-sublabel">{subAccounts.length === 0 ? 'Aucun sous-compte créé' : `sur ${currentUser.maxUsers - 1} disponibles`}</p>
+              </div>
+            </div>
+            <div className="crm-stat-card" style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05))' }}>
+              <div className="crm-stat-icon" style={{ background: 'rgba(139, 92, 246, 0.2)' }}>
+                <Crown size={24} style={{ color: '#8b5cf6' }} />
+              </div>
+              <div className="crm-stat-details">
+                <p className="crm-stat-label">Licence</p>
+                <h3 className="crm-stat-value">{license.name}</h3>
+                <p className="crm-stat-sublabel">{usedSlots} / {currentUser.maxUsers} utilisateurs</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="crm-license-header">
           <div className="crm-license-info">
             <div className="crm-license-badge" style={{ backgroundColor: license.color }}>
@@ -1425,6 +1451,27 @@ export function CRM({ onLogin, onLogout }) {
           </div>
         )}
 
+        {/* En-tête de la liste des utilisateurs */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem',
+          padding: '0 0.5rem'
+        }}>
+          <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>
+            👥 Liste des utilisateurs
+          </h3>
+          {currentUser.isOwner && subAccounts.length > 0 && (
+            <span style={{
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '0.9rem'
+            }}>
+              {subAccounts.length} sous-compte{subAccounts.length > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
         <div className="crm-team-list">
           <div className="crm-team-member crm-team-owner">
             <div className="crm-team-avatar"><Crown size={20} /></div>
@@ -1457,7 +1504,11 @@ export function CRM({ onLogin, onLogout }) {
                     <option value="manager">Manager</option>
                     <option value="admin">Admin</option>
                   </select>
-                  <button onClick={() => handleDeleteSubAccount(account.id)} className="crm-btn-delete-small">
+                  <button
+                    onClick={() => handleDeleteSubAccount(account.id)}
+                    className="crm-btn-delete-small"
+                    title="Supprimer ce sous-compte"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
