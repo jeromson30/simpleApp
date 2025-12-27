@@ -762,8 +762,6 @@ export function CRM({ onLogin, onLogout }) {
   // ==================== EMAIL HANDLERS ====================
 
   const handleOpenEmailComposer = (contact) => {
-    console.log('🎯 Opening email composer with contact:', contact);
-    console.log('🎯 Contact ID:', contact?.id, 'Type:', typeof contact?.id);
     setEmailContact(contact);
     setShowEmailComposer(true);
   };
