@@ -345,16 +345,15 @@ app.post('/api/crm/auth/register', async (req, res) => {
     // Hash du mot de passe
     const passwordHash = await hashPassword(password);
 
-    // Créer l'utilisateur
-    const userId = email.replace('@', '_').replace(/\./g, '_');
+    // Créer l'utilisateur (id sera auto-généré par SERIAL)
     const newUser = {
-      id: userId,
       email,
       password_hash: passwordHash,
       license: license || 'starter',
       is_owner: true,
       owner_id: null,
       role: 'owner',
+      is_active: true,
       suspended: false,
       company_name,
       company_siret,
@@ -366,16 +365,21 @@ app.post('/api/crm/auth/register', async (req, res) => {
 
     const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_users`, {
       method: 'POST',
-      headers: supabaseHeaders,
+      headers: {
+        ...supabaseHeaders,
+        'Prefer': 'return=representation'
+      },
       body: JSON.stringify(newUser)
     });
 
     if (!response.ok) {
-      throw new Error('Erreur Supabase');
+      const errorText = await response.text();
+      console.error('Erreur création utilisateur:', response.status, errorText);
+      throw new Error('Erreur création utilisateur');
     }
 
     const created = await response.json();
-    const user = created[0] || newUser;
+    const user = Array.isArray(created) ? created[0] : created;
 
     // Générer le token JWT
     const token = generateToken(user);
@@ -749,38 +753,43 @@ app.post('/api/crm/subaccounts', authenticateToken, async (req, res) => {
     // Hash du mot de passe
     const passwordHash = await hashPassword(password);
 
-    // Créer le sous-compte
-    const subAccountId = email.replace('@', '_').replace(/\./g, '_');
+    // Créer le sous-compte (id sera auto-généré par SERIAL)
     const newSubAccount = {
-      id: subAccountId,
       email,
       password_hash: passwordHash,
       license: req.user.license,
       is_owner: false,
       owner_id: req.user.id,
       role: role || 'member',
-      suspended: false, // ✅ Nouveau sous-compte = non suspendu
+      is_active: true,
+      suspended: false,
       created_at: new Date().toISOString()
     };
 
     const response = await fetch(`${SUPABASE_URL}/rest/v1/crm_users`, {
       method: 'POST',
-      headers: supabaseHeaders,
+      headers: {
+        ...supabaseHeaders,
+        'Prefer': 'return=representation'
+      },
       body: JSON.stringify(newSubAccount)
     });
 
     if (!response.ok) {
-      throw new Error('Erreur Supabase');
+      const errorText = await response.text();
+      console.error('Erreur création sous-compte:', response.status, errorText);
+      throw new Error('Erreur création sous-compte');
     }
 
     const created = await response.json();
+    const subAccount = Array.isArray(created) ? created[0] : created;
 
     res.status(201).json({
-      id: created[0]?.id || subAccountId,
-      email,
-      role: role || 'member',
-      suspended: false,
-      created_at: newSubAccount.created_at
+      id: subAccount.id,
+      email: subAccount.email,
+      role: subAccount.role,
+      suspended: subAccount.suspended,
+      created_at: subAccount.created_at
     });
 
   } catch (error) {
@@ -1878,9 +1887,9 @@ app.get('/api/crm/email-templates', authenticateToken, async (req, res) => {
     const allTemplates = await response.json();
     console.log('Templates reçus:', allTemplates.length);
 
-    // Filtrer les templates : ceux de l'owner ou les templates par défaut
+    // Filtrer les templates : ceux de l'owner, les templates par défaut, ou les templates globaux (owner_id NULL)
     const templates = allTemplates.filter(t =>
-      t.owner_id === ownerId || t.is_default === true
+      t.owner_id === ownerId || t.is_default === true || t.owner_id === null
     );
 
     console.log('Templates filtrés:', templates.length);
