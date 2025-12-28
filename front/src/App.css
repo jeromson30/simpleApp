@@ -4191,7 +4191,7 @@ main, nav, footer, .banner {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1100;
+  z-index: 9999 !important;
   padding: 2rem;
   animation: fadeIn 0.2s ease;
 }
@@ -5167,7 +5167,7 @@ table {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1100;
+  z-index: 9999 !important;
   padding: 1rem;
   animation: fadeIn 0.2s ease;
 }
@@ -5182,6 +5182,8 @@ table {
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.2s ease;
+  position: relative;
+  z-index: 10000 !important;
 }
 
 @media (max-width: 768px) {
