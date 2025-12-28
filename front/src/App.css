@@ -7595,11 +7595,12 @@ table {
   left: 0;
   right: 0;
   height: 72px;
-  background: rgba(10, 10, 15, 0.85);
+  background: rgba(30, 41, 59, 0.95);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 1000;
   transition: all 300ms ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .navbar-modern-container {
@@ -7630,7 +7631,7 @@ table {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7641,7 +7642,7 @@ table {
 .logo-text-modern {
   font-size: 1.25rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary), var(--brand-accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-size: 200% 200%;
@@ -7701,7 +7702,7 @@ table {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
   color: white;
   border: none;
   border-radius: 10px;
@@ -7765,7 +7766,7 @@ table {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7782,7 +7783,7 @@ table {
   top: calc(100% + 0.5rem);
   right: 0;
   min-width: 280px;
-  background: rgba(26, 26, 36, 0.95);
+  background: rgba(30, 41, 59, 0.98);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
@@ -7803,7 +7804,7 @@ table {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7874,9 +7875,9 @@ table {
   top: 72px;
   left: 0;
   right: 0;
-  background: rgba(10, 10, 15, 0.98);
+  background: rgba(30, 41, 59, 0.98);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -7913,7 +7914,7 @@ table {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem 1.25rem !important;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)) !important;
   border: none !important;
   cursor: pointer;
   font-weight: 600;
@@ -8008,12 +8009,12 @@ table {
 /* Only apply to public pages (home, offers, contact) not CRM */
 .home-modern,
 .main-content {
-  padding-top: 72px;
+  padding-top: 96px !important; /* 72px navbar + 24px spacing */
 }
 
 @media (max-width: 640px) {
   .home-modern,
   .main-content {
-    padding-top: 64px;
+    padding-top: 80px !important; /* 64px navbar + 16px spacing */
   }
 }
