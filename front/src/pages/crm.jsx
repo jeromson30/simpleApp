@@ -1210,29 +1210,139 @@ export function CRM({ onLogin, onLogout }) {
 
   // ==================== RENDER HELPERS ====================
 
+  const [pipelineFilter, setPipelineFilter] = React.useState('all');
+
   const renderPipeline = () => {
-    const stages = ['prospect', 'client', 'perdu'];
+    const filteredPipelineContacts = pipelineFilter === 'all'
+      ? contacts
+      : contacts.filter(c => c.status === pipelineFilter);
+
+    const stats = {
+      prospect: contacts.filter(c => c.status === 'prospect').length,
+      client: contacts.filter(c => c.status === 'client').length,
+      perdu: contacts.filter(c => c.status === 'perdu').length,
+    };
+
     return (
-      <div className="crm-pipeline-grid">
-        {stages.map(stage => (
-          <div key={stage} className="crm-pipeline-column">
-            <h3 className="crm-pipeline-title">
-              {stage === 'prospect' ? '🎯 Prospects' : stage === 'client' ? '✅ Clients' : '❌ Perdus'}
-            </h3>
-            <div className="crm-pipeline-cards">
-              {contacts.filter(c => c.status === stage).map(contact => (
-                <div key={contact.id} onClick={() => setSelectedContact(contact)} className="crm-pipeline-card">
-                  <h4>{contact.name}</h4>
-                  <p>{contact.company || 'Sans entreprise'}</p>
-                </div>
-              ))}
-              {contacts.filter(c => c.status === stage).length === 0 && (
-                <p className="crm-pipeline-empty">Aucun contact</p>
-              )}
-            </div>
+      <>
+        {/* Stats Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{
+            background: 'rgba(99, 102, 241, 0.1)',
+            border: '1px solid rgba(99, 102, 241, 0.2)',
+            borderRadius: '12px',
+            padding: '1.25rem',
+            cursor: 'pointer',
+            transition: 'all 200ms ease',
+            ...(pipelineFilter === 'prospect' && {
+              background: 'rgba(99, 102, 241, 0.15)',
+              borderColor: 'rgba(99, 102, 241, 0.3)'
+            })
+          }} onClick={() => setPipelineFilter(pipelineFilter === 'prospect' ? 'all' : 'prospect')}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Prospects</div>
+            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#818cf8' }}>{stats.prospect}</div>
           </div>
-        ))}
-      </div>
+
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            borderRadius: '12px',
+            padding: '1.25rem',
+            cursor: 'pointer',
+            transition: 'all 200ms ease',
+            ...(pipelineFilter === 'client' && {
+              background: 'rgba(16, 185, 129, 0.15)',
+              borderColor: 'rgba(16, 185, 129, 0.3)'
+            })
+          }} onClick={() => setPipelineFilter(pipelineFilter === 'client' ? 'all' : 'client')}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Clients</div>
+            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#34d399' }}>{stats.client}</div>
+          </div>
+
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            borderRadius: '12px',
+            padding: '1.25rem',
+            cursor: 'pointer',
+            transition: 'all 200ms ease',
+            ...(pipelineFilter === 'perdu' && {
+              background: 'rgba(239, 68, 68, 0.15)',
+              borderColor: 'rgba(239, 68, 68, 0.3)'
+            })
+          }} onClick={() => setPipelineFilter(pipelineFilter === 'perdu' ? 'all' : 'perdu')}>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Perdus</div>
+            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f87171' }}>{stats.perdu}</div>
+          </div>
+        </div>
+
+        {/* Pipeline Table */}
+        <div className="crm-table-container">
+          {filteredPipelineContacts.length > 0 ? (
+            <table className="crm-table">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Entreprise</th>
+                  <th>Email</th>
+                  <th>Téléphone</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPipelineContacts.map(contact => (
+                  <tr key={contact.id}>
+                    <td>
+                      <span className="cell-name" onClick={() => setSelectedContact(contact)}>
+                        {contact.name}
+                      </span>
+                    </td>
+                    <td className="cell-company">{contact.company || '—'}</td>
+                    <td className="cell-email">{contact.email}</td>
+                    <td className="cell-phone">{contact.phone || '—'}</td>
+                    <td>
+                      <span className={`status-pill ${contact.status}`}>
+                        {contact.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          onClick={() => handleOpenContactDetail(contact)}
+                          className="table-action-btn"
+                          title="Détails"
+                        >
+                          <Users size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(contact)}
+                          className="table-action-btn"
+                          title="Modifier"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <TrendingUp size={64} />
+              </div>
+              <div className="empty-state-title">Aucun contact dans le pipeline</div>
+              <div className="empty-state-description">
+                {pipelineFilter === 'all'
+                  ? 'Ajoutez des contacts pour commencer'
+                  : `Aucun contact avec le statut ${pipelineFilter}`}
+              </div>
+            </div>
+          )}
+        </div>
+      </>
     );
   };
 
@@ -2171,52 +2281,140 @@ export function CRM({ onLogin, onLogout }) {
           {/* Interactions Route */}
           <Route path="/interactions" element={
           <>
-            <div className="crm-interactions-grid">
-              <div>
-                <div className="crm-interactions-main">
-                  <h3 className="crm-interactions-title">
-                    {selectedContact ? `Interactions - ${selectedContact.name}` : 'Sélectionnez un contact'}
-                  </h3>
-                  {selectedContact && (
-                    <>
-                      <textarea placeholder="Ajouter une interaction..." value={interactionText}
-                        onChange={(e) => setInteractionText(e.target.value)} className="crm-interactions-textarea" />
-                      <button onClick={addInteraction} disabled={loading} className="crm-interactions-button">
-                        {loading ? 'Ajout...' : 'Ajouter'}
-                      </button>
-                      <div className="crm-interactions-list">
-                        {getContactInteractions(selectedContact.id).length > 0
-                          ? getContactInteractions(selectedContact.id).map(i => (
-                            <div key={i.id} className="crm-interaction-item">
-                              <p className="crm-interaction-text">{i.text}</p>
-                              <p className="crm-interaction-date">📅 {new Date(i.created_at).toLocaleString('fr-FR')}</p>
-                            </div>
-                          ))
-                          : <p className="crm-empty-message">Aucune interaction</p>
-                        }
-                      </div>
-                    </>
-                  )}
+            {/* Add Interaction Section */}
+            {selectedContact && (
+              <div className="crm-form-container" style={{ marginBottom: '1.5rem' }}>
+                <h3 className="crm-form-title">Nouvelle interaction - {selectedContact.name}</h3>
+                <textarea
+                  placeholder="Décrivez l'interaction..."
+                  value={interactionText}
+                  onChange={(e) => setInteractionText(e.target.value)}
+                  className="crm-form-textarea"
+                  rows="3"
+                  style={{ marginBottom: '1rem' }}
+                />
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button onClick={addInteraction} disabled={loading} className="btn-compact primary">
+                    <MessageSquare size={16} />
+                    <span>{loading ? 'Ajout...' : 'Ajouter l\'interaction'}</span>
+                  </button>
+                  <button onClick={() => setSelectedContact(null)} className="btn-compact secondary">
+                    Annuler
+                  </button>
                 </div>
               </div>
-              <div>
-                <div className="crm-interactions-sidebar">
-                  <h3 className="crm-sidebar-title">Contacts</h3>
-                  <div className="crm-contact-list">
+            )}
+
+            {/* Contact Filter */}
+            <div className="crm-toolbar">
+              <div className="crm-toolbar-content">
+                <div className="crm-search-container">
+                  <select
+                    value={selectedContact?.id || ''}
+                    onChange={(e) => setSelectedContact(contacts.find(c => c.id === parseInt(e.target.value)) || null)}
+                    className="crm-form-select"
+                    style={{ minWidth: '250px' }}
+                  >
+                    <option value="">Tous les contacts</option>
                     {contacts.map(c => (
-                      <button key={c.id} onClick={() => setSelectedContact(c)}
-                        className={`crm-contact-button ${selectedContact?.id === c.id ? 'active' : ''}`}>
-                        <h4>{c.name}</h4><p>{c.company || ''}</p>
-                      </button>
+                      <option key={c.id} value={c.id}>{c.name} {c.company ? `(${c.company})` : ''}</option>
                     ))}
-                  </div>
+                  </select>
+                </div>
+                <div className="crm-action-buttons">
+                  <button
+                    onClick={() => setSelectedContact(contacts[0] || null)}
+                    className="crm-button-add"
+                    disabled={!contacts.length}
+                  >
+                    <Plus size={18} />
+                    <span>Nouvelle interaction</span>
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="crm-toolbar">
-              <div className="crm-toolbar-content">
-                <p className="crm-toolbar-text">Sélectionnez un contact pour voir ses interactions</p>
-              </div>
+
+            {/* Interactions Table */}
+            <div className="crm-table-container">
+              {(selectedContact ? getContactInteractions(selectedContact.id) : interactions).length > 0 ? (
+                <table className="crm-table">
+                  <thead>
+                    <tr>
+                      <th>Contact</th>
+                      <th>Entreprise</th>
+                      <th>Interaction</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedContact ? getContactInteractions(selectedContact.id) : interactions).map(interaction => {
+                      const contact = contacts.find(c => c.id === interaction.contact_id);
+                      return (
+                        <tr key={interaction.id}>
+                          <td className="cell-name">
+                            {contact?.name || 'Contact supprimé'}
+                          </td>
+                          <td className="cell-company">{contact?.company || '—'}</td>
+                          <td style={{ maxWidth: '400px' }}>
+                            <div style={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              color: 'rgba(255,255,255,0.9)'
+                            }}>
+                              {interaction.text}
+                            </div>
+                          </td>
+                          <td className="cell-date">
+                            {new Date(interaction.created_at).toLocaleString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </td>
+                          <td>
+                            <div className="table-actions">
+                              <button
+                                onClick={() => setSelectedContact(contact)}
+                                className="table-action-btn"
+                                title="Voir le contact"
+                              >
+                                <Users size={16} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm('Supprimer cette interaction ?')) {
+                                    // TODO: implement delete
+                                  }
+                                }}
+                                className="table-action-btn danger"
+                                title="Supprimer"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-state-icon">
+                    <MessageSquare size={64} />
+                  </div>
+                  <div className="empty-state-title">Aucune interaction</div>
+                  <div className="empty-state-description">
+                    {selectedContact
+                      ? `Aucune interaction enregistrée pour ${selectedContact.name}`
+                      : 'Sélectionnez un contact pour ajouter une interaction'}
+                  </div>
+                </div>
+              )}
             </div>
           </>
           } />
