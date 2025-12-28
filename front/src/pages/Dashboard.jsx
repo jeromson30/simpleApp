@@ -5,8 +5,9 @@ import {
 } from 'recharts';
 import {
   TrendingUp, Users, Euro, Target, Clock, Award,
-  Calendar, Filter, RefreshCw
+  Calendar, Filter, RefreshCw, ArrowUp, ArrowDown
 } from 'lucide-react';
+import soundManager from '../utils/sounds';
 
 const Dashboard = ({ API_BASE, AuthService }) => {
   const [analytics, setAnalytics] = useState(null);
@@ -16,7 +17,7 @@ const Dashboard = ({ API_BASE, AuthService }) => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30'); // 7, 30, 90, 365
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   useEffect(() => {
     loadAnalytics();
@@ -24,6 +25,7 @@ const Dashboard = ({ API_BASE, AuthService }) => {
 
   const loadAnalytics = async () => {
     setLoading(true);
+    soundManager.click();
     try {
       const headers = AuthService.getAuthHeaders();
 
@@ -49,155 +51,243 @@ const Dashboard = ({ API_BASE, AuthService }) => {
     }
   };
 
+  const handlePeriodChange = (newPeriod) => {
+    soundManager.click();
+    setPeriod(newPeriod);
+  };
+
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <RefreshCw className="spinning" size={32} style={{ color: '#3b82f6' }} />
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px',
+        gap: '1rem'
+      }}>
+        <RefreshCw className="animate-spin" size={48} style={{ color: 'var(--brand-primary)' }} />
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+          Chargement des analytics...
+        </p>
       </div>
     );
   }
 
   if (!analytics) {
-    return <div>Erreur de chargement des données</div>;
+    return (
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+        <p style={{ color: 'var(--error)', fontSize: '1rem' }}>
+          Erreur de chargement des données
+        </p>
+        <button onClick={loadAnalytics} className="btn btn-primary" style={{ marginTop: 'var(--space-4)' }}>
+          <RefreshCw size={16} />
+          Réessayer
+        </button>
+      </div>
+    );
   }
 
   // Préparer les données pour les graphiques
   const contactsDistribution = [
-    { name: 'Prospects', value: analytics.contacts.prospects, color: '#3b82f6' },
+    { name: 'Prospects', value: analytics.contacts.prospects, color: '#6366f1' },
     { name: 'Clients', value: analytics.contacts.clients, color: '#10b981' },
     { name: 'Perdus', value: analytics.contacts.lost, color: '#ef4444' }
   ];
 
   const quotesDistribution = [
-    { name: 'Brouillon', value: analytics.quotes.draft, color: '#6b7280' },
-    { name: 'Envoyés', value: analytics.quotes.sent, color: '#3b82f6' },
+    { name: 'Brouillon', value: analytics.quotes.draft, color: '#64748b' },
+    { name: 'Envoyés', value: analytics.quotes.sent, color: '#6366f1' },
     { name: 'Acceptés', value: analytics.quotes.accepted, color: '#10b981' },
     { name: 'Refusés', value: analytics.quotes.rejected, color: '#ef4444' }
   ];
 
   return (
-    <div className="dashboard-container">
+    <div className="animate-fadeIn">
       {/* Header avec filtres */}
-      <div className="dashboard-header">
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 'var(--space-8)',
+        flexWrap: 'wrap',
+        gap: 'var(--space-4)'
+      }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: 'white', zIndex: 10}}>
-            📊 Dashboard Analytics
-          </h2>
-          <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
+          <h1 style={{
+            margin: 0,
+            fontSize: '2rem',
+            fontWeight: 800,
+            background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-accent))',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: 'var(--space-2)'
+          }}>
+            Dashboard Analytics
+          </h1>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
             Vue d'ensemble de votre activité commerciale
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', background: 'var(--surface-glass)', padding: 'var(--space-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-default)' }}>
             {['7', '30', '90', '365'].map(p => (
               <button
                 key={p}
-                onClick={() => setPeriod(p)}
-                className={`period-btn ${period === p ? 'active' : ''}`}
+                onClick={() => handlePeriodChange(p)}
+                className={`btn-sm transition-all ${period === p ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ minWidth: '60px' }}
               >
                 {p === '7' ? '7j' : p === '30' ? '30j' : p === '90' ? '90j' : '1an'}
               </button>
             ))}
           </div>
-          <button onClick={loadAnalytics} className="refresh-btn" title="Rafraîchir">
+          <button
+            onClick={loadAnalytics}
+            className="btn-secondary hover-scale transition-all"
+            style={{ padding: 'var(--space-3)' }}
+            title="Rafraîchir"
+          >
             <RefreshCw size={18} />
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="kpi-grid">
-        <div className="kpi-card blue">
-          <div className="kpi-icon">
-            <Users size={28} />
+      <div className="grid grid-cols-4 animate-fadeInUp" style={{ marginBottom: 'var(--space-8)' }}>
+        <div className="metric-card card">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))',
+              borderRadius: 'var(--radius-lg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--brand-primary)'
+            }}>
+              <Users size={28} />
+            </div>
           </div>
-          <div className="kpi-content">
-            <p className="kpi-label">Total Contacts</p>
-            <h3 className="kpi-value">{analytics.contacts.total}</h3>
-            <p className="kpi-sublabel">
-              +{analytics.contacts.newInPeriod} sur {period} jours
-            </p>
-          </div>
-        </div>
-
-        <div className="kpi-card green">
-          <div className="kpi-icon">
-            <Euro size={28} />
-          </div>
-          <div className="kpi-content">
-            <p className="kpi-label">Revenu Total</p>
-            <h3 className="kpi-value">{parseFloat(analytics.revenue.total).toLocaleString('fr-FR')}€</h3>
-            <p className="kpi-sublabel">
-              Potentiel: {parseFloat(analytics.revenue.potential).toLocaleString('fr-FR')}€
-            </p>
+          <p className="metric-label">Total Contacts</p>
+          <h3 className="metric-value">{analytics.contacts.total}</h3>
+          <div className="metric-change positive">
+            <ArrowUp size={14} />
+            <span>+{analytics.contacts.newInPeriod} sur {period}j</span>
           </div>
         </div>
 
-        <div className="kpi-card purple">
-          <div className="kpi-icon">
-            <Target size={28} />
+        <div className="metric-card card">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2))',
+              borderRadius: 'var(--radius-lg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--success)'
+            }}>
+              <Euro size={28} />
+            </div>
           </div>
-          <div className="kpi-content">
-            <p className="kpi-label">Taux de Conversion</p>
-            <h3 className="kpi-value">{analytics.contacts.conversionRate}%</h3>
-            <p className="kpi-sublabel">
-              {analytics.contacts.clients} clients / {analytics.contacts.total} contacts
-            </p>
-          </div>
+          <p className="metric-label">Revenu Total</p>
+          <h3 className="metric-value">{parseFloat(analytics.revenue.total).toLocaleString('fr-FR')}€</h3>
+          <p style={{ fontSize: '0.813rem', color: 'var(--text-tertiary)', marginTop: 'var(--space-2)' }}>
+            Potentiel: {parseFloat(analytics.revenue.potential).toLocaleString('fr-FR')}€
+          </p>
         </div>
 
-        <div className="kpi-card orange">
-          <div className="kpi-icon">
-            <Award size={28} />
+        <div className="metric-card card">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.2))',
+              borderRadius: 'var(--radius-lg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--brand-secondary)'
+            }}>
+              <Target size={28} />
+            </div>
           </div>
-          <div className="kpi-content">
-            <p className="kpi-label">Devis Moyen</p>
-            <h3 className="kpi-value">{parseFloat(analytics.revenue.average).toLocaleString('fr-FR')}€</h3>
-            <p className="kpi-sublabel">
-              Taux d'acceptation: {analytics.quotes.acceptanceRate}%
-            </p>
+          <p className="metric-label">Taux de Conversion</p>
+          <h3 className="metric-value">{analytics.contacts.conversionRate}%</h3>
+          <p style={{ fontSize: '0.813rem', color: 'var(--text-tertiary)', marginTop: 'var(--space-2)' }}>
+            {analytics.contacts.clients} clients / {analytics.contacts.total} contacts
+          </p>
+        </div>
+
+        <div className="metric-card card">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 146, 60, 0.2))',
+              borderRadius: 'var(--radius-lg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--warning)'
+            }}>
+              <Award size={28} />
+            </div>
           </div>
+          <p className="metric-label">Devis Moyen</p>
+          <h3 className="metric-value">{parseFloat(analytics.revenue.average).toLocaleString('fr-FR')}€</h3>
+          <p style={{ fontSize: '0.813rem', color: 'var(--text-tertiary)', marginTop: 'var(--space-2)' }}>
+            Acceptation: {analytics.quotes.acceptanceRate}%
+          </p>
         </div>
       </div>
 
       {/* Graphiques */}
-      <div className="charts-grid">
+      <div className="grid grid-cols-2" style={{ marginBottom: 'var(--space-8)' }}>
         {/* Évolution du CA */}
-        <div className="chart-card">
-          <h3 className="chart-title">
-            <TrendingUp size={20} />
-            Évolution du Chiffre d'Affaires
-          </h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <TrendingUp size={20} style={{ color: 'var(--brand-primary)' }} />
+              Évolution du Chiffre d'Affaires
+            </h3>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueData?.data || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="monthLabel"
-                stroke="rgba(255, 255, 255, 0.4)"
-                style={{ fontSize: '12px', fill: 'rgba(255, 255, 255, 0.7)' }}
+                stroke="var(--text-tertiary)"
+                style={{ fontSize: '12px', fill: 'var(--text-tertiary)' }}
               />
               <YAxis
-                stroke="rgba(255, 255, 255, 0.4)"
-                style={{ fontSize: '12px', fill: 'rgba(255, 255, 255, 0.7)' }}
+                stroke="var(--text-tertiary)"
+                style={{ fontSize: '12px', fill: 'var(--text-tertiary)' }}
                 tickFormatter={(value) => `${value}€`}
               />
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(26, 26, 36, 0.95)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  color: 'white'
+                  background: 'var(--surface-card)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: 'var(--space-3)',
+                  boxShadow: 'var(--shadow-xl)',
+                  backdropFilter: 'blur(20px)'
                 }}
+                labelStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
+                itemStyle={{ color: 'var(--text-secondary)' }}
                 formatter={(value) => [`${value}€`, 'Revenu']}
               />
               <Line
                 type="monotone"
                 dataKey="revenue"
-                stroke="#10b981"
+                stroke="var(--success)"
                 strokeWidth={3}
-                dot={{ fill: '#10b981', r: 5 }}
+                dot={{ fill: 'var(--success)', r: 5 }}
                 activeDot={{ r: 7 }}
               />
             </LineChart>
@@ -205,11 +295,13 @@ const Dashboard = ({ API_BASE, AuthService }) => {
         </div>
 
         {/* Répartition des contacts */}
-        <div className="chart-card">
-          <h3 className="chart-title">
-            <Users size={20} />
-            Répartition des Contacts
-          </h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Users size={20} style={{ color: 'var(--brand-primary)' }} />
+              Répartition des Contacts
+            </h3>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -221,41 +313,52 @@ const Dashboard = ({ API_BASE, AuthService }) => {
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
+                style={{ fontSize: '0.813rem', fill: 'var(--text-primary)' }}
               >
                 {contactsDistribution.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{
+                  background: 'var(--surface-card)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: 'var(--space-3)',
+                  boxShadow: 'var(--shadow-xl)'
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Répartition des devis */}
-        <div className="chart-card">
-          <h3 className="chart-title">
-            <Target size={20} />
-            Statuts des Devis
-          </h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Target size={20} style={{ color: 'var(--brand-primary)' }} />
+              Statuts des Devis
+            </h3>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={quotesDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="name"
-                stroke="rgba(255, 255, 255, 0.4)"
-                style={{ fontSize: '12px', fill: 'rgba(255, 255, 255, 0.7)' }}
+                stroke="var(--text-tertiary)"
+                style={{ fontSize: '12px', fill: 'var(--text-tertiary)' }}
               />
               <YAxis
-                stroke="rgba(255, 255, 255, 0.4)"
-                style={{ fontSize: '12px', fill: 'rgba(255, 255, 255, 0.7)' }}
+                stroke="var(--text-tertiary)"
+                style={{ fontSize: '12px', fill: 'var(--text-tertiary)' }}
               />
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(26, 26, 36, 0.95)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  color: 'white'
+                  background: 'var(--surface-card)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: 'var(--space-3)',
+                  boxShadow: 'var(--shadow-xl)'
                 }}
               />
               <Bar dataKey="value" radius={[8, 8, 0, 0]}>
@@ -268,25 +371,78 @@ const Dashboard = ({ API_BASE, AuthService }) => {
         </div>
 
         {/* Top Contacts */}
-        <div className="chart-card">
-          <h3 className="chart-title">
-            <Award size={20} />
-            Top 5 Clients par CA
-          </h3>
-          <div className="top-contacts-list">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Award size={20} style={{ color: 'var(--brand-primary)' }} />
+              Top 5 Clients par CA
+            </h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {topContacts.length === 0 ? (
-              <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)', padding: '2rem' }}>
+              <p style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: 'var(--space-8)' }}>
                 Aucun client avec CA pour le moment
               </p>
             ) : (
               topContacts.map((contact, index) => (
-                <div key={contact.id} className="top-contact-item">
-                  <div className="top-contact-rank">{index + 1}</div>
-                  <div className="top-contact-info">
-                    <p className="top-contact-name">{contact.name}</p>
-                    <p className="top-contact-company">{contact.company || contact.email}</p>
+                <div
+                  key={contact.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-4)',
+                    padding: 'var(--space-4)',
+                    background: 'var(--surface-glass)',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border-subtle)',
+                    transition: 'all var(--transition-base)'
+                  }}
+                  className="hover-scale"
+                >
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-secondary))',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '1.125rem',
+                    flexShrink: 0
+                  }}>
+                    {index + 1}
                   </div>
-                  <div className="top-contact-revenue">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      margin: 0,
+                      fontWeight: 600,
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {contact.name}
+                    </p>
+                    <p style={{
+                      margin: 0,
+                      fontSize: '0.75rem',
+                      color: 'var(--text-tertiary)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {contact.company || contact.email}
+                    </p>
+                  </div>
+                  <div style={{
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    color: 'var(--success)',
+                    flexShrink: 0
+                  }}>
                     {contact.revenue.toLocaleString('fr-FR')}€
                   </div>
                 </div>
@@ -297,28 +453,76 @@ const Dashboard = ({ API_BASE, AuthService }) => {
       </div>
 
       {/* Stats supplémentaires */}
-      <div className="stats-row">
-        <div className="stat-box">
-          <Clock size={20} style={{ color: '#3b82f6' }} />
-          <div>
-            <p className="stat-label">Temps moyen de conversion</p>
-            <p className="stat-value">{conversionData?.avgConversionDays || 0} jours</p>
+      <div className="grid grid-cols-3">
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))',
+            borderRadius: 'var(--radius-lg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--brand-primary)',
+            flexShrink: 0
+          }}>
+            <Clock size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+              Temps moyen de conversion
+            </p>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {conversionData?.avgConversionDays || 0} jours
+            </p>
           </div>
         </div>
 
-        <div className="stat-box">
-          <Calendar size={20} style={{ color: '#10b981' }} />
-          <div>
-            <p className="stat-label">Nouveaux devis ({period}j)</p>
-            <p className="stat-value">{analytics.quotes.newInPeriod}</p>
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2))',
+            borderRadius: 'var(--radius-lg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--success)',
+            flexShrink: 0
+          }}>
+            <Calendar size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+              Nouveaux devis ({period}j)
+            </p>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {analytics.quotes.newInPeriod}
+            </p>
           </div>
         </div>
 
-        <div className="stat-box">
-          <Users size={20} style={{ color: '#8b5cf6' }} />
-          <div>
-            <p className="stat-label">Nouvelles interactions ({period}j)</p>
-            <p className="stat-value">{analytics.interactions.newInPeriod}</p>
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.2))',
+            borderRadius: 'var(--radius-lg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--brand-secondary)',
+            flexShrink: 0
+          }}>
+            <Users size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+              Nouvelles interactions ({period}j)
+            </p>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {analytics.interactions.newInPeriod}
+            </p>
           </div>
         </div>
       </div>
