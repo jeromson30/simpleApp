@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, FileText, Sparkles, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Image as ImageIcon, Smile } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
+import toast, { Toaster } from 'react-hot-toast';
+import soundManager from '../utils/sounds';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -329,11 +331,17 @@ const EmailComposer = ({
 
   const handleSend = async () => {
     if (!emailData.recipient_email || !emailData.subject || !emailData.body) {
-      alert('Veuillez remplir tous les champs');
+      toast.error('Veuillez remplir tous les champs', {
+        duration: 3000,
+        position: 'top-center',
+      });
+      soundManager.error();
       return;
     }
 
     setLoading(true);
+    soundManager.send();
+
     try {
       const headers = AuthService.getAuthHeaders();
       const payload = {
@@ -352,16 +360,28 @@ const EmailComposer = ({
       });
 
       if (response.ok) {
-        alert('Email envoyé avec succès !');
+        toast.success('Email envoyé avec succès ! 🎉', {
+          duration: 4000,
+          position: 'top-center',
+        });
+        soundManager.success();
         if (onEmailSent) onEmailSent();
         handleClose(true); // true = skip confirmation car email envoyé
       } else {
         const error = await response.json();
-        alert(`Erreur: ${error.error}`);
+        toast.error(`Erreur: ${error.error}`, {
+          duration: 4000,
+          position: 'top-center',
+        });
+        soundManager.error();
       }
     } catch (error) {
       console.error('Erreur envoi email:', error);
-      alert('Erreur lors de l\'envoi de l\'email');
+      toast.error('Erreur lors de l\'envoi de l\'email', {
+        duration: 4000,
+        position: 'top-center',
+      });
+      soundManager.error();
     } finally {
       setLoading(false);
     }
@@ -382,6 +402,9 @@ const EmailComposer = ({
       }
     }
 
+    // Son de fermeture
+    soundManager.modalClose();
+
     // Réinitialiser et fermer
     setEmailData({
       recipient_email: '',
@@ -395,11 +418,43 @@ const EmailComposer = ({
     onClose();
   };
 
+  // Effet sonore d'ouverture au montage
+  useEffect(() => {
+    if (isOpen) {
+      soundManager.modalOpen();
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="email-composer-overlay" onClick={handleClose}>
-      <div className="email-composer-modal" onClick={(e) => e.stopPropagation()}>
+    <>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#1a1a24',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '16px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+      <div className="email-composer-overlay animate-fade-in" onClick={handleClose}>
+        <div className="email-composer-modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <div className="email-composer-header">
           <div>
             <h2 className="email-composer-title">
@@ -549,6 +604,7 @@ const EmailComposer = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 
