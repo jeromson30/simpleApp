@@ -11,7 +11,7 @@ import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { ListItemNode, ListNode } from '@lexical/list';
 import { LinkNode, AutoLinkNode } from '@lexical/link';
 import { $getRoot, $getSelection, FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND } from 'lexical';
-import { $generateHtmlFromNodes } from '@lexical/html';
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND } from '@lexical/list';
@@ -132,6 +132,29 @@ function ToolbarPlugin() {
       </button>
     </div>
   );
+}
+
+// Plugin pour initialiser le contenu de l'éditeur avec du HTML
+function InitialContentPlugin({ initialHtml }) {
+  const [editor] = useLexicalComposerContext();
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!initialHtml || isInitialized) return;
+
+    editor.update(() => {
+      const parser = new DOMParser();
+      const dom = parser.parseFromString(initialHtml, 'text/html');
+      const nodes = $generateNodesFromDOM(editor, dom);
+      const root = $getRoot();
+      root.clear();
+      root.append(...nodes);
+    });
+
+    setIsInitialized(true);
+  }, [editor, initialHtml, isInitialized]);
+
+  return null;
 }
 
 const EmailComposer = ({
@@ -378,6 +401,7 @@ const EmailComposer = ({
                     ErrorBoundary={LexicalErrorBoundary}
                   />
                   <OnChangePlugin onChange={handleEditorChange} />
+                  <InitialContentPlugin initialHtml={emailData.body} />
                   <HistoryPlugin />
                   <ListPlugin />
                   <LinkPlugin />
