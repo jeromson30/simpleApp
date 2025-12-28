@@ -1,5 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, FileText, Sparkles } from 'lucide-react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+// Configuration de l'éditeur Quill
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'align': [] }],
+    ['link', 'image'],
+    ['clean']
+  ]
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'color', 'background',
+  'list', 'bullet',
+  'align',
+  'link', 'image'
+];
 
 const EmailComposer = ({
   isOpen,
@@ -227,13 +251,18 @@ const EmailComposer = ({
           {/* Body */}
           <div className="email-form-group">
             <label className="email-form-label">Message *</label>
-            <textarea
-              className="email-form-textarea"
+            <ReactQuill
+              theme="snow"
               value={emailData.body}
-              onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
-              placeholder="Votre message..."
-              rows={10}
-              required
+              onChange={(value) => setEmailData({ ...emailData, body: value })}
+              modules={quillModules}
+              formats={quillFormats}
+              placeholder="Rédigez votre message avec mise en forme..."
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                borderRadius: '8px',
+                minHeight: '250px'
+              }}
             />
           </div>
 

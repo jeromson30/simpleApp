@@ -5509,3 +5509,113 @@ table {
     border-radius: 16px 16px 0 0;
   }
 }
+/* ===== REACT QUILL EDITOR STYLES ===== */
+.ql-toolbar.ql-snow {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 8px !important;
+}
+
+.ql-container.ql-snow {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-top: none !important;
+  border-radius: 0 0 8px 8px !important;
+  color: #e5e7eb !important;
+  font-size: 14px !important;
+  min-height: 250px !important;
+}
+
+.ql-editor {
+  min-height: 250px !important;
+  color: #e5e7eb !important;
+}
+
+.ql-editor.ql-blank::before {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-style: normal !important;
+}
+
+.ql-snow .ql-stroke {
+  stroke: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ql-snow .ql-fill {
+  fill: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ql-snow .ql-picker-label {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ql-snow .ql-picker-options {
+  background: #1a1a24 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.ql-snow .ql-picker-item {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ql-snow .ql-picker-item:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #3b82f6 !important;
+}
+
+.ql-toolbar button:hover .ql-stroke,
+.ql-toolbar button:focus .ql-stroke,
+.ql-toolbar button.ql-active .ql-stroke {
+  stroke: #3b82f6 !important;
+}
+
+.ql-toolbar button:hover .ql-fill,
+.ql-toolbar button:focus .ql-fill,
+.ql-toolbar button.ql-active .ql-fill {
+  fill: #3b82f6 !important;
+}
+
+.ql-snow.ql-toolbar button:hover,
+.ql-snow .ql-toolbar button:hover,
+.ql-snow.ql-toolbar button:focus,
+.ql-snow .ql-toolbar button:focus,
+.ql-snow.ql-toolbar button.ql-active,
+.ql-snow .ql-toolbar button.ql-active {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-radius: 4px !important;
+}
+
+.ql-snow a {
+  color: #3b82f6 !important;
+}
+
+/* Tooltip styles */
+.ql-tooltip {
+  background: #1a1a24 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e5e7eb !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.ql-tooltip input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e5e7eb !important;
+  padding: 8px !important;
+  border-radius: 4px !important;
+}
+
+.ql-tooltip .ql-preview {
+  color: #3b82f6 !important;
+}
+
+.ql-tooltip .ql-action::after,
+.ql-tooltip .ql-remove::before {
+  color: #e5e7eb !important;
+}
+
+/* Color picker */
+.ql-color-picker .ql-picker-label svg,
+.ql-icon-picker .ql-picker-label svg {
+  right: 4px !important;
+}
