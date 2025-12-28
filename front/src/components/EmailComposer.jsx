@@ -192,6 +192,7 @@ const EmailComposer = ({
   const [loading, setLoading] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
   const [editorKey, setEditorKey] = useState(0);
+  const [templateContent, setTemplateContent] = useState(''); // Contenu initial du template (ne change qu'à la sélection)
 
   useEffect(() => {
     if (isOpen) {
@@ -249,6 +250,9 @@ const EmailComposer = ({
       body
     }));
 
+    // Définir le contenu du template pour l'initialisation de l'éditeur
+    setTemplateContent(body);
+
     // Force re-render of editor with new content
     setEditorKey(prev => prev + 1);
   };
@@ -301,6 +305,19 @@ const EmailComposer = ({
   };
 
   const handleClose = () => {
+    // Vérifier s'il y a du contenu non sauvegardé
+    const hasUnsavedContent = emailData.subject.trim() || emailData.body.trim();
+
+    if (hasUnsavedContent) {
+      const confirmClose = window.confirm(
+        'Vous avez du contenu non enregistré. Êtes-vous sûr de vouloir fermer sans envoyer ?'
+      );
+      if (!confirmClose) {
+        return; // Ne pas fermer
+      }
+    }
+
+    // Réinitialiser et fermer
     setEmailData({
       recipient_email: '',
       recipient_name: '',
@@ -308,6 +325,7 @@ const EmailComposer = ({
       body: ''
     });
     setSelectedTemplate(null);
+    setTemplateContent('');
     setEditorKey(prev => prev + 1);
     onClose();
   };
@@ -417,7 +435,7 @@ const EmailComposer = ({
                     ErrorBoundary={LexicalErrorBoundary}
                   />
                   <OnChangePlugin onChange={handleEditorChange} />
-                  <InitialContentPlugin initialContent={emailData.body} />
+                  <InitialContentPlugin initialContent={templateContent} />
                   <HistoryPlugin />
                   <ListPlugin />
                   <LinkPlugin />
