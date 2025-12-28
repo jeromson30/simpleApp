@@ -21,8 +21,9 @@ function AppContent() {
   const animationRef = useRef(null);
   const location = useLocation();
 
-  // Vérifier si on est sur la page admin (pour masquer le header/footer)
+  // Vérifier si on est sur la page admin ou CRM (pour masquer le header/footer)
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isCrmPage = location.pathname.startsWith('/crm');
 
   useEffect(() => {
     fetchData();
@@ -30,8 +31,8 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    // Ne pas afficher le canvas sur la page admin
-    if (isAdminPage) return;
+    // Ne pas afficher le canvas sur la page admin ou CRM
+    if (isAdminPage || isCrmPage) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -174,7 +175,7 @@ function AppContent() {
       window.removeEventListener('resize', resize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [isAdminPage]);
+  }, [isAdminPage, isCrmPage]);
 
   const fetchData = async () => {
     try {
@@ -257,25 +258,28 @@ function AppContent() {
     <div className="App">
       <canvas ref={canvasRef} className="pixi-background" />
 
-      <Header 
-        menuOpen={menuOpen} 
-        setMenuOpen={setMenuOpen}
-        onLogout={handleCrmLogout}
-        currentUser={currentCrmUser}
-      />
+      {/* Header uniquement pour les pages publiques (pas CRM) */}
+      {!isCrmPage && (
+        <Header
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          onLogout={handleCrmLogout}
+          currentUser={currentCrmUser}
+        />
+      )}
 
       <Routes>
-        <Route 
-          path="/" 
-          element={<HomeContent data={data} loading={loading} nom={nom} setNom={setNom} handleSubmit={handleSubmit} />} 
+        <Route
+          path="/"
+          element={<HomeContent />}
         />
         <Route
           path="/offers"
           element={<OffersContent />}
         />
-        <Route 
-          path="/contact" 
-          element={<ContactContent />} 
+        <Route
+          path="/contact"
+          element={<ContactContent />}
         />
         <Route
           path="/crm/*"
@@ -283,11 +287,14 @@ function AppContent() {
         />
       </Routes>
 
-      <footer className="footer">
-        <div className="footer-container">
-          <p>&copy; 2025 Prism CRM. Tous droits réservés.</p>
-        </div>
-      </footer>
+      {/* Footer uniquement pour les pages publiques (pas CRM) */}
+      {!isCrmPage && (
+        <footer className="footer">
+          <div className="footer-container">
+            <p>&copy; 2025 Prism CRM. Tous droits réservés.</p>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
