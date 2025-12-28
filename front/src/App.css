@@ -5512,18 +5512,18 @@ table {
 
 /* ===== LEXICAL EDITOR STYLES ===== */
 .lexical-editor-wrapper {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .lexical-toolbar {
   display: flex;
   gap: 4px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   flex-wrap: wrap;
 }
 
@@ -5533,40 +5533,42 @@ table {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .lexical-toolbar button:hover {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .lexical-toolbar button.is-active {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 .toolbar-separator {
   width: 1px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2);
   margin: 4px 4px;
 }
 
 .lexical-editor-container {
   position: relative;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .lexical-content-editable {
   padding: 16px;
   min-height: 250px;
-  color: #e5e7eb;
+  color: #f3f4f6;
   outline: none;
   font-size: 14px;
   line-height: 1.6;
@@ -5576,7 +5578,7 @@ table {
   position: absolute;
   top: 16px;
   left: 16px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
   pointer-events: none;
   user-select: none;
 }
