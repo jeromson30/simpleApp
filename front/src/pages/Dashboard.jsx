@@ -80,7 +80,7 @@ const Dashboard = ({ API_BASE, AuthService }) => {
       {/* Header avec filtres */}
       <div className="dashboard-header">
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: 'white' }}>
+          <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: 'white', zIndex: 10}}>
             📊 Dashboard Analytics
           </h2>
           <p style={{ margin: '0.5rem 0 0 0', color: 'rgba(255, 255, 255, 0.7)' }}>
