@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, 
 import Dashboard from './Dashboard';
 import EmailComposer from '../components/EmailComposer';
 import EmailHistory from '../components/EmailHistory';
+import { Layout } from '../components/Layout';
 import '../App.css';
 
 // Configuration API
@@ -1687,11 +1688,9 @@ export function CRM({ onLogin, onLogout }) {
   // ==================== MAIN CRM INTERFACE ====================
 
   return (
-    <div className="crm-container">
-      <div className="crm-main">
-
-        {/* Routes */}
-        <Routes>
+    <Layout currentUser={currentUser} onLogout={handleLogout}>
+      {/* Routes */}
+      <Routes>
           {/* Redirect root to dashboard */}
           <Route path="/" element={<Navigate to="/crm/dashboard" replace />} />
 
@@ -2265,7 +2264,7 @@ export function CRM({ onLogin, onLogout }) {
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </Routes>
+    </Layout>
   );
 }
