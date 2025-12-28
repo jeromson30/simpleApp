@@ -1,29 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, FileText, Sparkles } from 'lucide-react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-
-// Configuration de l'éditeur Quill
-const quillModules = {
-  toolbar: [
-    [{ 'header': [1, 2, 3, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ 'color': [] }, { 'background': [] }],
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    [{ 'align': [] }],
-    ['link', 'image'],
-    ['clean']
-  ]
-};
-
-const quillFormats = [
-  'header',
-  'bold', 'italic', 'underline', 'strike',
-  'color', 'background',
-  'list', 'bullet',
-  'align',
-  'link', 'image'
-];
+import { X, Send, FileText, Sparkles, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Image as ImageIcon, Palette } from 'lucide-react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TextAlign from '@tiptap/extension-text-align';
+import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
+import Underline from '@tiptap/extension-underline';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
 
 const EmailComposer = ({
   isOpen,
@@ -43,6 +27,34 @@ const EmailComposer = ({
   });
   const [loading, setLoading] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
+
+  // Configuration de l'éditeur Tiptap
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      TextStyle,
+      Color,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Link.configure({
+        openOnClick: false,
+      }),
+      Image,
+    ],
+    content: emailData.body,
+    onUpdate: ({ editor }) => {
+      setEmailData(prev => ({ ...prev, body: editor.getHTML() }));
+    },
+  });
+
+  // Mettre à jour l'éditeur quand emailData.body change (pour les templates)
+  useEffect(() => {
+    if (editor && emailData.body !== editor.getHTML()) {
+      editor.commands.setContent(emailData.body);
+    }
+  }, [emailData.body, editor]);
 
   useEffect(() => {
     if (isOpen) {
@@ -251,19 +263,115 @@ const EmailComposer = ({
           {/* Body */}
           <div className="email-form-group">
             <label className="email-form-label">Message *</label>
-            <ReactQuill
-              theme="snow"
-              value={emailData.body}
-              onChange={(value) => setEmailData({ ...emailData, body: value })}
-              modules={quillModules}
-              formats={quillFormats}
-              placeholder="Rédigez votre message avec mise en forme..."
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                borderRadius: '8px',
-                minHeight: '250px'
-              }}
-            />
+            {editor && (
+              <div className="tiptap-editor-wrapper">
+                {/* Toolbar */}
+                <div className="tiptap-toolbar">
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                    className={editor.isActive('bold') ? 'is-active' : ''}
+                    title="Gras"
+                  >
+                    <Bold size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                    className={editor.isActive('italic') ? 'is-active' : ''}
+                    title="Italique"
+                  >
+                    <Italic size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                    className={editor.isActive('underline') ? 'is-active' : ''}
+                    title="Souligné"
+                  >
+                    <Underline size={16} />
+                  </button>
+                  <div className="tiptap-separator"></div>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                    className={editor.isActive('bulletList') ? 'is-active' : ''}
+                    title="Liste à puces"
+                  >
+                    <List size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                    className={editor.isActive('orderedList') ? 'is-active' : ''}
+                    title="Liste numérotée"
+                  >
+                    <ListOrdered size={16} />
+                  </button>
+                  <div className="tiptap-separator"></div>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                    className={editor.isActive({ textAlign: 'left' }) ? 'is-active' : ''}
+                    title="Aligner à gauche"
+                  >
+                    <AlignLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                    className={editor.isActive({ textAlign: 'center' }) ? 'is-active' : ''}
+                    title="Centrer"
+                  >
+                    <AlignCenter size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                    className={editor.isActive({ textAlign: 'right' }) ? 'is-active' : ''}
+                    title="Aligner à droite"
+                  >
+                    <AlignRight size={16} />
+                  </button>
+                  <div className="tiptap-separator"></div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = window.prompt('URL du lien:');
+                      if (url) {
+                        editor.chain().focus().setLink({ href: url }).run();
+                      }
+                    }}
+                    className={editor.isActive('link') ? 'is-active' : ''}
+                    title="Insérer un lien"
+                  >
+                    <LinkIcon size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = window.prompt('URL de l\'image:');
+                      if (url) {
+                        editor.chain().focus().setImage({ src: url }).run();
+                      }
+                    }}
+                    title="Insérer une image"
+                  >
+                    <ImageIcon size={16} />
+                  </button>
+                  <div className="tiptap-separator"></div>
+                  <input
+                    type="color"
+                    onInput={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                    value={editor.getAttributes('textStyle').color || '#ffffff'}
+                    title="Couleur du texte"
+                    style={{ width: '30px', height: '30px', border: 'none', cursor: 'pointer' }}
+                  />
+                </div>
+                {/* Editor */}
+                <EditorContent editor={editor} className="tiptap-content" />
+              </div>
+            )}
           </div>
 
           {/* Variables helper */}
