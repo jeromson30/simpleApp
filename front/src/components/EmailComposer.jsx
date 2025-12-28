@@ -10,7 +10,7 @@ import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { ListItemNode, ListNode } from '@lexical/list';
 import { LinkNode, AutoLinkNode } from '@lexical/link';
-import { $getRoot, $getSelection, FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND } from 'lexical';
+import { $getRoot, $getSelection, $createParagraphNode, $createTextNode, FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND } from 'lexical';
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
@@ -134,25 +134,41 @@ function ToolbarPlugin() {
   );
 }
 
-// Plugin pour initialiser le contenu de l'éditeur avec du HTML
-function InitialContentPlugin({ initialHtml }) {
+// Plugin pour initialiser le contenu de l'éditeur avec du HTML ou du texte
+function InitialContentPlugin({ initialContent }) {
   const [editor] = useLexicalComposerContext();
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!initialHtml || isInitialized) return;
+    if (!initialContent) return;
 
-    editor.update(() => {
-      const parser = new DOMParser();
-      const dom = parser.parseFromString(initialHtml, 'text/html');
-      const nodes = $generateNodesFromDOM(editor, dom);
-      const root = $getRoot();
-      root.clear();
-      root.append(...nodes);
-    });
+    // Délai pour s'assurer que l'éditeur est prêt
+    const timer = setTimeout(() => {
+      editor.update(() => {
+        const root = $getRoot();
+        root.clear();
 
-    setIsInitialized(true);
-  }, [editor, initialHtml, isInitialized]);
+        // Convertir le HTML en texte si nécessaire
+        const parser = new DOMParser();
+        const dom = parser.parseFromString(initialContent, 'text/html');
+
+        try {
+          const nodes = $generateNodesFromDOM(editor, dom);
+          root.append(...nodes);
+        } catch (error) {
+          console.error('Erreur parsing HTML:', error);
+          // Fallback: traiter comme du texte brut
+          const paragraphs = initialContent.split('\n').filter(line => line.trim());
+          paragraphs.forEach(text => {
+            const paragraph = $createParagraphNode();
+            paragraph.append($createTextNode(text));
+            root.append(paragraph);
+          });
+        }
+      });
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [editor, initialContent]);
 
   return null;
 }
@@ -401,7 +417,7 @@ const EmailComposer = ({
                     ErrorBoundary={LexicalErrorBoundary}
                   />
                   <OnChangePlugin onChange={handleEditorChange} />
-                  <InitialContentPlugin initialHtml={emailData.body} />
+                  <InitialContentPlugin initialContent={emailData.body} />
                   <HistoryPlugin />
                   <ListPlugin />
                   <LinkPlugin />
