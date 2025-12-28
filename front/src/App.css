@@ -7583,3 +7583,437 @@ table {
     justify-content: center;
   }
 }
+
+/* ========================================
+   MODERN HEADER/NAVBAR STYLES
+   ======================================== */
+
+/* Main Navbar */
+.navbar-modern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 1000;
+  transition: all 300ms ease;
+}
+
+.navbar-modern-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  gap: 2rem;
+}
+
+/* Logo */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  transition: all 300ms ease;
+}
+
+.navbar-logo:hover {
+  transform: translateY(-2px);
+}
+
+.logo-icon-modern {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.logo-text-modern {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Navigation Links */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.navbar-links a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-size: 0.938rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: all 300ms ease;
+}
+
+.navbar-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  transition: width 300ms ease;
+}
+
+.navbar-links a:hover,
+.navbar-links a.active {
+  color: white;
+}
+
+.navbar-links a:hover::after,
+.navbar-links a.active::after {
+  width: 100%;
+}
+
+/* Actions Container */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* CRM Access Button (Primary) */
+.btn-crm-access {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.938rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 300ms ease;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.btn-crm-access:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4);
+}
+
+.btn-crm-access:active {
+  transform: translateY(0);
+}
+
+/* Login Button */
+.btn-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  font-size: 0.938rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 300ms ease;
+  backdrop-filter: blur(10px);
+}
+
+.btn-login:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* User Menu */
+.user-menu-container {
+  position: relative;
+}
+
+.user-menu-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 300ms ease;
+}
+
+.user-menu-button:hover {
+  transform: scale(1.05);
+}
+
+.user-avatar-modern {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* User Dropdown */
+.user-dropdown-modern {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 280px;
+  background: rgba(26, 26, 36, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  z-index: 1001;
+}
+
+.user-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.user-avatar-large-modern {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.user-dropdown-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 0.25rem 0;
+}
+
+.user-dropdown-email {
+  font-size: 0.813rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.user-dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.user-dropdown-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 0.938rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  text-align: left;
+}
+
+.user-dropdown-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle-modern {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem;
+  color: white;
+  cursor: pointer;
+  transition: all 300ms ease;
+}
+
+.mobile-menu-toggle-modern:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile Menu */
+.mobile-menu-modern {
+  position: fixed;
+  top: 72px;
+  left: 0;
+  right: 0;
+  background: rgba(10, 10, 15, 0.98);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 999;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-menu-modern a,
+.mobile-menu-modern button {
+  width: 100%;
+  padding: 1rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: white;
+  text-decoration: none;
+  font-size: 0.938rem;
+  font-weight: 500;
+  transition: all 200ms ease;
+  display: block;
+}
+
+.mobile-menu-modern a:hover,
+.mobile-menu-modern button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.mobile-crm-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem !important;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border: none !important;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mobile-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mobile-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.mobile-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0.5rem 0;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .navbar-modern-container {
+    padding: 0 1.5rem;
+  }
+
+  .navbar-links {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+  }
+
+  .mobile-menu-toggle-modern {
+    display: flex;
+  }
+
+  .btn-crm-access,
+  .btn-login {
+    display: none;
+  }
+
+  .navbar-modern-container {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar-modern {
+    height: 64px;
+  }
+
+  .mobile-menu-modern {
+    top: 64px;
+    padding: 1rem;
+  }
+
+  .logo-text-modern {
+    font-size: 1.125rem;
+  }
+
+  .logo-icon-modern {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-avatar-modern {
+    width: 36px;
+    height: 36px;
+    font-size: 0.938rem;
+  }
+}
+
+/* Ensure page content doesn't get hidden under fixed navbar */
+/* Only apply to public pages (home, offers, contact) not CRM */
+.home-modern,
+.main-content {
+  padding-top: 72px;
+}
+
+@media (max-width: 640px) {
+  .home-modern,
+  .main-content {
+    padding-top: 64px;
+  }
+}
