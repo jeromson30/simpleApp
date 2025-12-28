@@ -2264,7 +2264,6 @@ export function CRM({ onLogin, onLogout }) {
             </div>
           </div>
         )}
-      </Routes>
     </Layout>
   );
 }
