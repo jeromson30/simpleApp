@@ -300,14 +300,15 @@ main, nav, footer, .banner {
 /* ===== NAVBAR ===== */
 .navbar {
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(20, 30, 60, 0.95) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(100, 200, 255, 0.2);
   padding: 0.5rem 0;
   position: sticky;
   top: 0;
-  z-index: 100;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: var(--z-sticky);
+  box-shadow: var(--shadow-xl);
+  animation: fadeInDown var(--transition-slow) ease-out;
 }
 
 .navbar-container {
@@ -347,14 +348,31 @@ main, nav, footer, .banner {
   color: #d1d5db;
   text-decoration: none;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   padding: 0.5rem 0;
   border-bottom: 2px solid transparent;
+  position: relative;
+}
+
+.desktop-menu a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #64c8ff, #a855f7);
+  transform: translateX(-50%);
+  transition: width var(--transition-base);
 }
 
 .desktop-menu a:hover {
   color: white;
-  border-bottom-color: #64c8ff;
+  transform: translateY(-2px);
+}
+
+.desktop-menu a:hover::after {
+  width: 100%;
 }
 
 /* Séparateur visuel dans la navigation */
@@ -371,7 +389,7 @@ main, nav, footer, .banner {
   color: #64c8ff !important;
   text-decoration: none;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   padding: 0.5rem 0;
   display: inline-flex;
   align-items: center;
@@ -380,32 +398,73 @@ main, nav, footer, .banner {
   border-bottom: 2px solid transparent;
 }
 
+.nav-crm-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--gradient-blue);
+  transform: translateX(-50%);
+  transition: width var(--transition-base);
+  box-shadow: var(--shadow-glow);
+}
+
 .nav-crm-link:hover {
   color: #93d5ff !important;
-  border-bottom-color: rgba(100, 200, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.nav-crm-link:hover::after {
+  width: 100%;
+}
+
+.nav-crm-link.active::after {
+  width: 100%;
 }
 
 .nav-crm-link.active {
   color: white !important;
-  border-bottom-color: #64c8ff;
 }
 
 .nav-crm-btn {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: var(--gradient-blue);
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
 }
 
 .nav-crm-btn:hover {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: var(--shadow-glow);
   transform: translateY(-2px);
+}
+
+.nav-admin-btn {
+  background: rgba(139, 92, 246, 0.1);
+  color: #a78bfa;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  text-decoration: none;
+}
+
+.nav-admin-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
 
 .mobile-menu-btn {
@@ -414,10 +473,11 @@ main, nav, footer, .banner {
   border: none;
   color: white;
   cursor: pointer;
-  padding: 0.5rem;
-  transition: all 0.3s ease;
+  padding: var(--space-2);
+  transition: all var(--transition-base);
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-md);
 }
 
 @media (min-width: 768px) {
@@ -428,6 +488,8 @@ main, nav, footer, .banner {
 
 .mobile-menu-btn:hover {
   color: #64c8ff;
+  background: rgba(100, 200, 255, 0.1);
+  transform: rotate(90deg);
 }
 
 .mobile-menu {
