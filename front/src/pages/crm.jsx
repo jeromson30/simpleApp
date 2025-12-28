@@ -654,10 +654,12 @@ export function CRM({ onLogin, onLogout }) {
         throw new Error(data.error || 'Erreur création');
       }
 
-      setSubAccounts([...subAccounts, data]);
       setNewSubAccount({ email: '', password: '', role: 'member' });
       setShowSubAccountForm(false);
       alert(`Utilisateur ${data.email} créé avec succès !`);
+
+      // Recharger la liste depuis le serveur
+      await loadSubAccounts();
 
     } catch (error) {
       alert(error.message);
@@ -673,7 +675,9 @@ export function CRM({ onLogin, onLogout }) {
     try {
       const response = await ApiService.deleteSubAccount(subAccountId);
       if (response.ok) {
-        setSubAccounts(subAccounts.filter(sa => sa.id !== subAccountId));
+        alert('Utilisateur supprimé avec succès');
+        // Recharger la liste depuis le serveur
+        await loadSubAccounts();
       }
     } catch (error) {
       alert('Erreur suppression');
@@ -686,9 +690,8 @@ export function CRM({ onLogin, onLogout }) {
     try {
       const response = await ApiService.updateSubAccountRole(subAccountId, newRole);
       if (response.ok) {
-        setSubAccounts(subAccounts.map(sa =>
-          sa.id === subAccountId ? { ...sa, role: newRole } : sa
-        ));
+        // Recharger la liste depuis le serveur
+        await loadSubAccounts();
       }
     } catch (error) {
       alert('Erreur modification');
