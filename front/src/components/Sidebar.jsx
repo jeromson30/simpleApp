@@ -122,21 +122,6 @@ export function Sidebar({ currentUser, mobileOpen, onMobileClose }) {
           </div>
         )}
       </nav>
-
-      {/* Footer */}
-      <div className="sidebar-footer">
-        {!collapsed && currentUser && (
-          <div className="sidebar-user animate-fadeIn">
-            <div className="sidebar-user-avatar">
-              {currentUser.email.charAt(0).toUpperCase()}
-            </div>
-            <div className="sidebar-user-info">
-              <div className="sidebar-user-name">{currentUser.email.split('@')[0]}</div>
-              <div className="sidebar-user-email">{currentUser.email}</div>
-            </div>
-          </div>
-        )}
-      </div>
     </aside>
     </>
   );
