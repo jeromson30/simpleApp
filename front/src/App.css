@@ -8537,19 +8537,18 @@ table {
    Based on Sidebar & Dashboard Design
    ======================================== */
 
-/* Toolbar - Fixed at bottom */
+/* Toolbar - Positioned at top */
 .crm-toolbar {
-  position: fixed;
-  bottom: 0;
-  left: var(--sidebar-width);
-  right: 0;
-  background: rgba(30, 41, 59, 0.98);
+  position: relative;
+  background: rgba(30, 41, 59, 0.6);
   backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: var(--space-4) var(--space-6);
-  z-index: 100;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-  transition: left var(--transition-base);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-6);
+  z-index: 10;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: all var(--transition-base);
 }
 
 .crm-toolbar-content {
@@ -8780,7 +8779,6 @@ table {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: var(--space-5);
-  margin-bottom: 100px; /* Space for fixed toolbar */
   animation: fadeInUp 500ms ease;
 }
 
@@ -8922,27 +8920,29 @@ table {
   outline: none;
 }
 
+/* Default edit button (primary/indigo) */
 .crm-btn-edit {
-  background: rgba(99, 102, 241, 0.15);
-  color: var(--brand-primary);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: var(--brand-primary) !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
 }
 
 .crm-btn-edit:hover {
-  background: rgba(99, 102, 241, 0.25);
-  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.25) !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
   transform: translateY(-1px);
 }
 
+/* Delete button (danger/red) */
 .crm-btn-delete {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--danger);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: var(--danger) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
 }
 
 .crm-btn-delete:hover {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
   transform: translateY(-1px);
 }
 
@@ -8957,13 +8957,8 @@ table {
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-  .crm-toolbar {
-    left: 0;
-  }
-
   .crm-contacts-list {
     grid-template-columns: 1fr;
-    margin-bottom: 120px;
   }
 
   .crm-form-grid {
@@ -9007,9 +9002,4 @@ table {
   }
 }
 
-/* Sidebar collapsed state */
-@media (min-width: 769px) {
-  .sidebar-collapsed ~ * .crm-toolbar {
-    left: 80px;
-  }
-}
+/* Toolbar is now relative positioned and doesn't need sidebar collapse adjustments */
