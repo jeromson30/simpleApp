@@ -6,6 +6,8 @@ import {
   ArrowUp, ArrowDown, Zap, TrendingUp, MessageSquare,
   Download, Eye, FileText, Image, Newspaper, Euro, PieChart, CreditCard, Menu
 } from 'lucide-react';
+import '../styles/components/admin.css';
+import '../styles/components/dashboard.css';
 
 const ADMIN_API = '/api/admin';
 

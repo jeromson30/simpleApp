@@ -4,6 +4,8 @@ import { X, Send, FileText, Sparkles, Bold, Italic, Underline, List, ListOrdered
 import EmojiPicker from 'emoji-picker-react';
 import toast, { Toaster } from 'react-hot-toast';
 import soundManager from '../utils/sounds';
+import '../styles/components/email-composer.css';
+import '../styles/components/lexical-editor.css';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';

@@ -6,7 +6,8 @@ import Dashboard from './Dashboard';
 import EmailComposer from '../components/EmailComposer';
 import EmailHistory from '../components/EmailHistory';
 import { Layout } from '../components/Layout';
-import '../App.css';
+import '../styles/components/crm.css';
+import '../styles/components/table.css';
 
 // Configuration API
 const API_BASE = process.env.REACT_APP_API_URL || '/api/crm';

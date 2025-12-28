@@ -3,6 +3,7 @@ import { Search, Bell, LogOut, Shield, Menu, X } from 'lucide-react';
 import NotificationCenter from './NotificationCenter';
 import soundManager from '../utils/sounds';
 import toast from 'react-hot-toast';
+import '../styles/components/topbar.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || '/api/crm';
 

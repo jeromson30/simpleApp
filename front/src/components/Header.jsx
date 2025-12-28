@@ -3,6 +3,7 @@ import { Menu, X, LogOut, LayoutDashboard, ArrowRight, User } from 'lucide-react
 import { useState, useRef, useEffect } from 'react';
 import soundManager from '../utils/sounds';
 import toast from 'react-hot-toast';
+import '../styles/components/header.css';
 
 export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
   const location = useLocation();

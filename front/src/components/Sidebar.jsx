@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import soundManager from '../utils/sounds';
+import '../styles/components/sidebar.css';
 
 export function Sidebar({ currentUser, mobileOpen, onMobileClose }) {
   const location = useLocation();
