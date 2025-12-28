@@ -1751,7 +1751,7 @@ async function retryFailedEmails() {
       const result = await sendEmailViaSMTP(
         email.recipient_email,
         email.subject,
-        email.body.replace(/\n/g, '<br>')
+        email.body  // Le body est déjà en HTML
       );
 
       let updateData = {
@@ -1838,7 +1838,7 @@ app.post('/api/crm/emails', authenticateToken, async (req, res) => {
       smtpResult = await sendEmailViaSMTP(
         recipient_email,
         subject,
-        body.replace(/\n/g, '<br>')  // Convertir retours à la ligne en HTML
+        body  // Le body est déjà en HTML depuis l'éditeur riche
       );
 
       if (smtpResult.success) {
