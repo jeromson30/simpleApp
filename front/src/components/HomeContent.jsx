@@ -11,6 +11,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import '../styles/components/home.css';
 
 export function HomeContent() {
   const navigate = useNavigate();

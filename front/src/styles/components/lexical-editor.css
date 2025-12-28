@@ -1,0 +1,176 @@
+/* ===== LEXICAL EDITOR STYLES ===== */
+.lexical-editor-wrapper {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.lexical-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  flex-wrap: wrap;
+}
+
+.lexical-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lexical-toolbar button:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.lexical-toolbar button.is-active {
+  background: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 4px 4px;
+}
+
+.lexical-editor-container {
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.lexical-content-editable {
+  padding: 16px;
+  min-height: 350px;
+  color: #f3f4f6;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lexical-placeholder {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Editor paragraph styles */
+.editor-paragraph {
+  margin: 0 0 8px 0;
+}
+
+.editor-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* Editor heading styles */
+.editor-heading-h1,
+.editor-heading-h2,
+.editor-heading-h3 {
+  margin: 16px 0 8px 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.editor-heading-h1:first-child,
+.editor-heading-h2:first-child,
+.editor-heading-h3:first-child {
+  margin-top: 0;
+}
+
+.editor-heading-h1 {
+  font-size: 2em;
+}
+
+.editor-heading-h2 {
+  font-size: 1.5em;
+}
+
+.editor-heading-h3 {
+  font-size: 1.25em;
+}
+
+/* Editor text formatting */
+.editor-text-bold {
+  font-weight: 600;
+}
+
+.editor-text-italic {
+  font-style: italic;
+}
+
+.editor-text-underline {
+  text-decoration: underline;
+}
+
+/* Editor list styles */
+.editor-list-ul,
+.editor-list-ol {
+  padding-left: 24px;
+  margin: 8px 0;
+}
+
+.editor-listitem {
+  margin: 4px 0;
+}
+
+/* Editor link styles */
+.editor-link {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.editor-link:hover {
+  color: #60a5fa;
+}
+
+/* Text alignment */
+[style*="text-align: left"] {
+  text-align: left;
+}
+
+[style*="text-align: center"] {
+  text-align: center;
+}
+
+[style*="text-align: right"] {
+  text-align: right;
+}
+
+[style*="text-align: justify"] {
+  text-align: justify;
+}
+
+/* Images dans l'éditeur */
+.lexical-content-editable img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 8px 0;
+  cursor: pointer;
+}
+
+/* Emoji picker dans la toolbar */
+.EmojiPickerReact {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+

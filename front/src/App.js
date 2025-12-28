@@ -6,7 +6,8 @@ import { HomeContent } from './components/HomeContent';
 import { OffersContent } from './components/OffersContent';
 import { CRM } from './pages/crm';
 import AdminPanel from './pages/AdminPanel';
-import './App.css';
+import './styles/variables.css';
+import './styles/global.css';
 
 // Composant principal
 function AppContent() {

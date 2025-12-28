@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Clock, CheckCircle, AlertCircle, Eye, RefreshCw } from 'lucide-react';
+import '../styles/components/email-history.css';
 
 const EmailHistory = ({ contactId, API_BASE, AuthService }) => {
   const [emails, setEmails] = useState([]);

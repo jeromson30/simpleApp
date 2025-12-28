@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Mail, Check, CheckCheck, X } from 'lucide-react';
+import '../styles/components/notification-center.css';
 
 const NotificationCenter = ({ API_BASE, AuthService }) => {
   const [notifications, setNotifications] = useState([]);

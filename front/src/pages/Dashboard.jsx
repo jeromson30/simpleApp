@@ -8,6 +8,7 @@ import {
   Calendar, Filter, RefreshCw, ArrowUp, ArrowDown
 } from 'lucide-react';
 import soundManager from '../utils/sounds';
+import '../styles/components/dashboard.css';
 
 const Dashboard = ({ API_BASE, AuthService }) => {
   const [analytics, setAnalytics] = useState(null);
