@@ -13,6 +13,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
+    "emoji-picker-react": "^4.16.1",
     "lexical": "^0.39.0",
     "lucide-react": "^0.556.0",
     "react": "^19.2.1",

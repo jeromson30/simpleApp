@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { X, Send, FileText, Sparkles, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Send, FileText, Sparkles, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Image as ImageIcon, Smile } from 'lucide-react';
+import EmojiPicker from 'emoji-picker-react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -46,17 +47,56 @@ const editorConfig = {
 };
 
 // Toolbar Component
-function ToolbarPlugin() {
+function ToolbarPlugin({ onEmojiClick }) {
   const [editor] = useLexicalComposerContext();
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null);
+
+  // Fermer l'emoji picker si on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const insertLink = () => {
-    const url = prompt('Enter URL:');
+    const url = prompt('Entrez l\'URL:');
     if (url) {
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
     }
+  };
+
+  const insertImage = () => {
+    const url = prompt('Entrez l\'URL de l\'image:');
+    if (url) {
+      editor.update(() => {
+        const selection = $getSelection();
+        if (selection) {
+          const imgHtml = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto; border-radius: 4px; margin: 8px 0;" />`;
+          const parser = new DOMParser();
+          const dom = parser.parseFromString(imgHtml, 'text/html');
+          const nodes = $generateNodesFromDOM(editor, dom);
+          selection.insertNodes(nodes);
+        }
+      });
+    }
+  };
+
+  const handleEmojiSelect = (emojiObject) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if (selection) {
+        selection.insertText(emojiObject.emoji);
+      }
+    });
+    setShowEmojiPicker(false);
   };
 
   return (
@@ -130,6 +170,29 @@ function ToolbarPlugin() {
       >
         <LinkIcon size={16} />
       </button>
+      <button
+        type="button"
+        onClick={insertImage}
+        title="Insérer une image"
+      >
+        <ImageIcon size={16} />
+      </button>
+      <div className="toolbar-separator"></div>
+      <div style={{ position: 'relative' }} ref={emojiPickerRef}>
+        <button
+          type="button"
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          title="Insérer un emoji"
+          className={showEmojiPicker ? 'is-active' : ''}
+        >
+          <Smile size={16} />
+        </button>
+        {showEmojiPicker && (
+          <div style={{ position: 'absolute', top: '40px', left: '0', zIndex: 1000 }}>
+            <EmojiPicker onEmojiClick={handleEmojiSelect} theme="dark" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -192,6 +255,7 @@ const EmailComposer = ({
   const [loading, setLoading] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
   const [editorKey, setEditorKey] = useState(0);
+  const [templateContent, setTemplateContent] = useState(''); // Contenu initial du template (ne change qu'à la sélection)
 
   useEffect(() => {
     if (isOpen) {
@@ -249,6 +313,9 @@ const EmailComposer = ({
       body
     }));
 
+    // Définir le contenu du template pour l'initialisation de l'éditeur
+    setTemplateContent(body);
+
     // Force re-render of editor with new content
     setEditorKey(prev => prev + 1);
   };
@@ -301,6 +368,19 @@ const EmailComposer = ({
   };
 
   const handleClose = () => {
+    // Vérifier s'il y a du contenu non sauvegardé
+    const hasUnsavedContent = emailData.subject.trim() || emailData.body.trim();
+
+    if (hasUnsavedContent) {
+      const confirmClose = window.confirm(
+        'Vous avez du contenu non enregistré. Êtes-vous sûr de vouloir fermer sans envoyer ?'
+      );
+      if (!confirmClose) {
+        return; // Ne pas fermer
+      }
+    }
+
+    // Réinitialiser et fermer
     setEmailData({
       recipient_email: '',
       recipient_name: '',
@@ -308,6 +388,7 @@ const EmailComposer = ({
       body: ''
     });
     setSelectedTemplate(null);
+    setTemplateContent('');
     setEditorKey(prev => prev + 1);
     onClose();
   };
@@ -417,7 +498,7 @@ const EmailComposer = ({
                     ErrorBoundary={LexicalErrorBoundary}
                   />
                   <OnChangePlugin onChange={handleEditorChange} />
-                  <InitialContentPlugin initialContent={emailData.body} />
+                  <InitialContentPlugin initialContent={templateContent} />
                   <HistoryPlugin />
                   <ListPlugin />
                   <LinkPlugin />
