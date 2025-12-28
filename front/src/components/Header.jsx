@@ -1,7 +1,9 @@
 import { useLocation } from 'react-router-dom';
 import { Menu, X, Lock, LogOut, Shield, Users, FileText, TrendingUp, MessageSquare, Settings, LayoutDashboard } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NotificationCenter from './NotificationCenter';
+import soundManager from '../utils/sounds';
+import toast from 'react-hot-toast';
 
 // Configuration API
 const API_BASE = process.env.REACT_APP_API_URL || '/api/crm';
@@ -48,10 +50,27 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
   const title = getTitleByPath(location.pathname);
 
   const handleLogout = () => {
+    soundManager.click();
     setShowUserMenu(false);
+    toast.success('Déconnexion réussie', {
+      duration: 2000,
+      position: 'top-center',
+    });
     if (onLogout) {
       onLogout();
     }
+  };
+
+  // Son au clic sur le menu mobile
+  const handleMenuToggle = () => {
+    soundManager.click();
+    setMenuOpen(!menuOpen);
+  };
+
+  // Son au clic sur le menu utilisateur
+  const handleUserMenuToggle = () => {
+    soundManager.click();
+    setShowUserMenu(!showUserMenu);
   };
 
   return (
@@ -110,17 +129,17 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
           {currentUser && (
             <div className="user-menu-desktop">
               <button
-                className="user-menu-toggle"
-                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="user-menu-toggle hover-scale transition-all"
+                onClick={handleUserMenuToggle}
                 title={currentUser.email}
               >
                 <div className="user-avatar">
                   {currentUser.email.charAt(0).toUpperCase()}
                 </div>
               </button>
-              
+
               {showUserMenu && (
-                <div className="user-menu-dropdown">
+                <div className="user-menu-dropdown animate-fade-in-up">
                   <div className="user-menu-header">
                     <p className="user-email">{currentUser.email}</p>
                   </div>
@@ -135,9 +154,9 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
             </div>
           )}
 
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="mobile-menu-btn"
+          <button
+            onClick={handleMenuToggle}
+            className="mobile-menu-btn hover-scale transition-all"
           >
             {menuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -145,7 +164,7 @@ export function Header({ menuOpen, setMenuOpen, onLogout, currentUser }) {
       </nav>
 
       {menuOpen && (
-        <div className="mobile-menu">
+        <div className="mobile-menu animate-slide-up">
           <a href="/">Accueil</a>
           <a href="/offers">Offres</a>
           <a href="/contact">Contact</a>
