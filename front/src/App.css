@@ -5509,113 +5509,162 @@ table {
     border-radius: 16px 16px 0 0;
   }
 }
-/* ===== REACT QUILL EDITOR STYLES ===== */
-.ql-toolbar.ql-snow {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 8px 8px 0 0 !important;
-  padding: 8px !important;
+
+/* ===== LEXICAL EDITOR STYLES ===== */
+.lexical-editor-wrapper {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.ql-container.ql-snow {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-top: none !important;
-  border-radius: 0 0 8px 8px !important;
-  color: #e5e7eb !important;
-  font-size: 14px !important;
-  min-height: 250px !important;
+.lexical-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
 }
 
-.ql-editor {
-  min-height: 250px !important;
-  color: #e5e7eb !important;
+.lexical-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.ql-editor.ql-blank::before {
-  color: rgba(255, 255, 255, 0.4) !important;
-  font-style: normal !important;
+.lexical-toolbar button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
-.ql-snow .ql-stroke {
-  stroke: rgba(255, 255, 255, 0.7) !important;
+.lexical-toolbar button.is-active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
 }
 
-.ql-snow .ql-fill {
-  fill: rgba(255, 255, 255, 0.7) !important;
+.toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px 4px;
 }
 
-.ql-snow .ql-picker-label {
-  color: rgba(255, 255, 255, 0.7) !important;
+.lexical-editor-container {
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.ql-snow .ql-picker-options {
-  background: #1a1a24 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+.lexical-content-editable {
+  padding: 16px;
+  min-height: 250px;
+  color: #e5e7eb;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
-.ql-snow .ql-picker-item {
-  color: rgba(255, 255, 255, 0.7) !important;
+.lexical-placeholder {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  user-select: none;
 }
 
-.ql-snow .ql-picker-item:hover {
-  background: rgba(59, 130, 246, 0.2) !important;
-  color: #3b82f6 !important;
+/* Editor paragraph styles */
+.editor-paragraph {
+  margin: 0 0 8px 0;
 }
 
-.ql-toolbar button:hover .ql-stroke,
-.ql-toolbar button:focus .ql-stroke,
-.ql-toolbar button.ql-active .ql-stroke {
-  stroke: #3b82f6 !important;
+.editor-paragraph:last-child {
+  margin-bottom: 0;
 }
 
-.ql-toolbar button:hover .ql-fill,
-.ql-toolbar button:focus .ql-fill,
-.ql-toolbar button.ql-active .ql-fill {
-  fill: #3b82f6 !important;
+/* Editor heading styles */
+.editor-heading-h1,
+.editor-heading-h2,
+.editor-heading-h3 {
+  margin: 16px 0 8px 0;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
-.ql-snow.ql-toolbar button:hover,
-.ql-snow .ql-toolbar button:hover,
-.ql-snow.ql-toolbar button:focus,
-.ql-snow .ql-toolbar button:focus,
-.ql-snow.ql-toolbar button.ql-active,
-.ql-snow .ql-toolbar button.ql-active {
-  background: rgba(59, 130, 246, 0.1) !important;
-  border-radius: 4px !important;
+.editor-heading-h1:first-child,
+.editor-heading-h2:first-child,
+.editor-heading-h3:first-child {
+  margin-top: 0;
 }
 
-.ql-snow a {
-  color: #3b82f6 !important;
+.editor-heading-h1 {
+  font-size: 2em;
 }
 
-/* Tooltip styles */
-.ql-tooltip {
-  background: #1a1a24 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #e5e7eb !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+.editor-heading-h2 {
+  font-size: 1.5em;
 }
 
-.ql-tooltip input {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #e5e7eb !important;
-  padding: 8px !important;
-  border-radius: 4px !important;
+.editor-heading-h3 {
+  font-size: 1.25em;
 }
 
-.ql-tooltip .ql-preview {
-  color: #3b82f6 !important;
+/* Editor text formatting */
+.editor-text-bold {
+  font-weight: 600;
 }
 
-.ql-tooltip .ql-action::after,
-.ql-tooltip .ql-remove::before {
-  color: #e5e7eb !important;
+.editor-text-italic {
+  font-style: italic;
 }
 
-/* Color picker */
-.ql-color-picker .ql-picker-label svg,
-.ql-icon-picker .ql-picker-label svg {
-  right: 4px !important;
+.editor-text-underline {
+  text-decoration: underline;
+}
+
+/* Editor list styles */
+.editor-list-ul,
+.editor-list-ol {
+  padding-left: 24px;
+  margin: 8px 0;
+}
+
+.editor-listitem {
+  margin: 4px 0;
+}
+
+/* Editor link styles */
+.editor-link {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.editor-link:hover {
+  color: #60a5fa;
+}
+
+/* Text alignment */
+[style*="text-align: left"] {
+  text-align: left;
+}
+
+[style*="text-align: center"] {
+  text-align: center;
+}
+
+[style*="text-align: right"] {
+  text-align: right;
+}
+
+[style*="text-align: justify"] {
+  text-align: justify;
 }
