@@ -1,275 +1,255 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Users, TrendingUp, MessageSquare, Download, Zap, Shield, Activity, Eye, FileText, Settings } from 'lucide-react';
-
-// Mapping des noms d'icônes vers les composants
-const ICON_MAP = {
+import React from 'react';
+import {
+  ArrowRight,
   Users,
   TrendingUp,
   MessageSquare,
-  Download,
+  BarChart3,
   Zap,
   Shield,
-  Activity,
-  Eye,
-  FileText,
-  Settings
-};
+  CheckCircle2,
+  Sparkles
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-// Données par défaut (fallback si l'API ne répond pas)
-const DEFAULT_FEATURES = [
-  {
-    id: 1,
-    icon: 'Users',
-    title: 'Gestion des Contacts',
-    description: 'Centralisez tous vos contacts avec des informations détaillées, notes et historique d\'interactions.',
-    color: '#64c8ff',
-    cta_text: 'Accéder au CRM →',
-    cta_link: '/crm'
-  },
-  {
-    id: 2,
-    icon: 'TrendingUp',
-    title: 'Pipeline Visuel',
-    description: 'Visualisez vos prospects, clients et opportunités perdues dans un kanban intuitif et dynamique.',
-    color: '#a855f7',
-    cta_text: 'Accéder au CRM →',
-    cta_link: '/crm'
-  },
-  {
-    id: 3,
-    icon: 'MessageSquare',
-    title: 'Suivi des Interactions',
-    description: 'Enregistrez chaque appel, email et réunion pour ne rien oublier de vos échanges.',
-    color: '#64c8ff',
-    cta_text: 'Accéder au CRM →',
-    cta_link: '/crm'
-  },
-  {
-    id: 4,
-    icon: 'Download',
-    title: 'Export de Données',
-    description: 'Exportez facilement vos contacts et rapports pour une utilisation externe.',
-    color: '#a855f7',
-    cta_text: 'Accéder au CRM →',
-    cta_link: '/crm'
-  },
-  {
-    id: 5,
-    icon: 'Zap',
-    title: 'Statistiques en Temps Réel',
-    description: 'Suivez votre taux de conversion, vos prospects et vos clients avec des graphiques en direct.',
-    color: '#64c8ff',
-    cta_text: 'Accéder au CRM →',
-    cta_link: '/crm'
-  }
-];
+export function HomeContent() {
+  const navigate = useNavigate();
 
-const DEFAULT_NEWS = [
-  {
-    id: 1,
-    date: '15 Décembre 2024',
-    title: 'Lancement de CRM Pro v2.0',
-    description: 'Découvrez la nouvelle interface et les fonctionnalités améliorées du CRM Pro avec support des interactions avancées.',
-    image: '📊',
-    category: 'Mise à jour',
-    link: '#'
-  },
-  {
-    id: 2,
-    date: '10 Décembre 2024',
-    title: 'Nouvelle Feature: Pipeline Kanban',
-    description: 'Gérez visuellement vos prospects avec notre nouveau système de pipeline entièrement réconçu.',
-    image: '🎯',
-    category: 'Fonctionnalité',
-    link: '#'
-  },
-  {
-    id: 3,
-    date: '5 Décembre 2024',
-    title: 'Nouvelles Offres d\'Abonnement',
-    description: 'Découvrez nos 4 plans d\'abonnement CRM adaptés à tous les besoins, du Starter gratuit à l\'Enterprise.',
-    image: '💎',
-    category: 'Offres',
-    link: '/stats'
-  },
-  {
-    id: 4,
-    date: '1 Décembre 2024',
-    title: 'Optimisation des Performances',
-    description: 'L\'application est 40% plus rapide grâce à nos optimisations de rendu et de stockage.',
-    image: '⚡',
-    category: 'Performance',
-    link: '#'
-  }
-];
+  const features = [
+    {
+      icon: Users,
+      title: 'Gestion des Contacts',
+      description: 'Centralisez tous vos contacts avec informations détaillées et historique complet.',
+      gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Pipeline Visuel',
+      description: 'Visualisez vos opportunités dans un pipeline intuitif et suivez vos conversions.',
+      gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)'
+    },
+    {
+      icon: MessageSquare,
+      title: 'Communications',
+      description: 'Envoyez des emails, enregistrez les interactions et ne manquez rien.',
+      gradient: 'linear-gradient(135deg, #06b6d4, #0891b2)'
+    },
+    {
+      icon: BarChart3,
+      title: 'Analytics Avancées',
+      description: 'Tableaux de bord en temps réel avec métriques et graphiques détaillés.',
+      gradient: 'linear-gradient(135deg, #10b981, #059669)'
+    },
+    {
+      icon: Zap,
+      title: 'Automatisations',
+      description: 'Gagnez du temps avec des templates et workflows automatisés.',
+      gradient: 'linear-gradient(135deg, #f59e0b, #d97706)'
+    },
+    {
+      icon: Shield,
+      title: 'Sécurité Pro',
+      description: 'Données chiffrées, backups automatiques et conformité RGPD.',
+      gradient: 'linear-gradient(135deg, #ef4444, #dc2626)'
+    }
+  ];
 
-export function HomeContent({ data, loading, nom, setNom, handleSubmit }) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [crmFeatures, setCrmFeatures] = useState(DEFAULT_FEATURES);
-  const [news, setNews] = useState(DEFAULT_NEWS);
-  const [contentLoading, setContentLoading] = useState(true);
+  const benefits = [
+    'Interface moderne et intuitive',
+    'Multi-utilisateurs avec rôles',
+    'Export PDF et Excel',
+    'Support prioritaire',
+    'Mises à jour gratuites',
+    'API REST complète'
+  ];
 
-  // Charger le contenu depuis l'API
-  useEffect(() => {
-    const loadContent = async () => {
-      try {
-        // Charger le carrousel
-        const carouselResponse = await fetch('/api/content/carousel');
-        if (carouselResponse.ok) {
-          const carouselData = await carouselResponse.json();
-          if (carouselData && carouselData.length > 0) {
-            setCrmFeatures(carouselData);
-          }
-        }
-
-        // Charger les actualités
-        const newsResponse = await fetch('/api/content/news');
-        if (newsResponse.ok) {
-          const newsData = await newsResponse.json();
-          if (newsData && newsData.length > 0) {
-            setNews(newsData);
-          }
-        }
-      } catch (error) {
-        console.error('Erreur chargement contenu:', error);
-        // En cas d'erreur, on garde les données par défaut
-      } finally {
-        setContentLoading(false);
-      }
-    };
-
-    loadContent();
-  }, []);
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % crmFeatures.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + crmFeatures.length) % crmFeatures.length);
-  };
-
-  // Obtenir le composant d'icône à partir du nom
-  const getIconComponent = (iconName) => {
-    return ICON_MAP[iconName] || Zap;
-  };
-
-  const currentFeature = crmFeatures[currentSlide];
-  const CurrentIcon = getIconComponent(currentFeature?.icon);
+  const stats = [
+    { value: '10K+', label: 'Contacts gérés' },
+    { value: '95%', label: 'Satisfaction client' },
+    { value: '24/7', label: 'Support disponible' },
+    { value: '99.9%', label: 'Uptime garanti' }
+  ];
 
   return (
-    <main className="main-content">
-      {/* ===== SECTION CARROUSEL CRM ===== */}
-      <div style={{ marginBottom: '4rem' }}>
-        
-        <div className="crm-carousel-container">
-          {contentLoading ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Chargement...</p>
-            </div>
-          ) : (
-            <>
-              <div className="crm-carousel-slide">
-                <div className="crm-carousel-icon">
-                  <CurrentIcon size={64} color={currentFeature?.color || '#64c8ff'} />
-                </div>
-                <h2 className="crm-carousel-title">{currentFeature?.title}</h2>
-                <p className="crm-carousel-description">{currentFeature?.description}</p>
-                <a href={currentFeature?.cta_link || '/crm'} className="crm-carousel-cta">
-                  {currentFeature?.cta_text || 'Accéder au CRM →'}
-                </a>
-              </div>
-
-              <div className="crm-carousel-controls">
-                <button 
-                  className="carousel-btn-option2" 
-                  onClick={prevSlide} 
-                  aria-label="Slide précédent"
-                  title="Slide précédent"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                
-                <div className="carousel-indicators">
-                  {crmFeatures.map((_, index) => (
-                    <button
-                      key={index}
-                      className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
-                      onClick={() => setCurrentSlide(index)}
-                      aria-label={`Aller au slide ${index + 1}`}
-                      title={`Slide ${index + 1}`}
-                    />
-                  ))}
-                </div>
-
-                <button 
-                  className="carousel-btn-option2" 
-                  onClick={nextSlide} 
-                  aria-label="Slide suivant"
-                  title="Slide suivant"
-                >
-                  <ChevronRight size={24} />
-                </button>
-              </div>
-
-              <div className="carousel-counter">
-                {currentSlide + 1} / {crmFeatures.length}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* ===== SECTION ACTUALITÉS ===== */}
-      <div>
-        <h3 style={{ textAlign: 'center', marginBottom: '2rem' }}>Dernières Actualités</h3>
-        
-        {contentLoading ? (
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Chargement des actualités...</p>
+    <main className="home-modern">
+      {/* Hero Section */}
+      <section className="hero-section animate-fadeIn">
+        <div className="hero-content">
+          <div className="hero-badge">
+            <Sparkles size={16} />
+            <span>Nouvelle version 2.0</span>
           </div>
-        ) : (
-          <div className="news-grid">
-            {news.map((item) => (
-              <article key={item.id} className="news-card">
-                <div className="news-header">
-                  <span className="news-image">{item.image}</span>
-                  <div className="news-meta">
-                    <span className="news-category">{item.category}</span>
-                    <time className="news-date">{item.date}</time>
-                  </div>
-                </div>
-                <h4 className="news-title">{item.title}</h4>
-                <p className="news-description">{item.description}</p>
-                {item.link && item.link !== '#' ? (
-                  <a href={item.link} className="news-link">Lire la suite →</a>
-                ) : (
-                  <span className="news-link" style={{ cursor: 'default', opacity: 0.5 }}>Lire la suite →</span>
-                )}
-              </article>
+
+          <h1 className="hero-title">
+            Gérez vos relations clients avec
+            <span className="hero-gradient-text"> Prism CRM</span>
+          </h1>
+
+          <p className="hero-description">
+            La solution CRM moderne et intuitive pour les entreprises qui veulent booster leurs ventes.
+            Tableau de bord analytics, pipeline visuel, gestion des contacts et bien plus.
+          </p>
+
+          <div className="hero-cta">
+            <button
+              className="btn-hero-primary"
+              onClick={() => navigate('/crm')}
+            >
+              Accéder au CRM
+              <ArrowRight size={20} />
+            </button>
+            <button
+              className="btn-hero-secondary"
+              onClick={() => navigate('/offers')}
+            >
+              Voir les offres
+            </button>
+          </div>
+
+          <div className="hero-stats">
+            {stats.map((stat, index) => (
+              <div key={index} className="hero-stat-item animate-fadeInUp" style={{ animationDelay: `${index * 100}ms` }}>
+                <div className="stat-value">{stat.value}</div>
+                <div className="stat-label">{stat.label}</div>
+              </div>
             ))}
           </div>
-        )}
-      </div>
-
-      {/* ===== SECTION NEWSLETTER ===== */}
-      <div style={{ marginTop: '4rem', textAlign: 'center' }}>
-        <h3>Restez Informé</h3>
-        <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginBottom: '2rem' }}>Abonnez-vous à notre newsletter pour recevoir les dernières actualités</p>
-        
-        <div className="form-container" style={{ maxWidth: '500px', margin: '0 auto' }}>
-          <form onSubmit={handleSubmit} className="form">
-            <input 
-              type="email"
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              placeholder="Votre email"
-              style={{ flex: 1 }}
-            />
-            <button type="submit">S'abonner</button>
-          </form>
         </div>
-      </div>
+
+        <div className="hero-visual">
+          <div className="hero-card-float">
+            <div className="float-card card-1 animate-fadeInUp">
+              <div className="mini-chart">
+                <TrendingUp size={24} color="#10b981" />
+              </div>
+              <div className="mini-text">
+                <div className="mini-value">+45%</div>
+                <div className="mini-label">Conversions</div>
+              </div>
+            </div>
+            <div className="float-card card-2 animate-fadeInUp" style={{ animationDelay: '200ms' }}>
+              <div className="mini-chart">
+                <Users size={24} color="#6366f1" />
+              </div>
+              <div className="mini-text">
+                <div className="mini-value">1,234</div>
+                <div className="mini-label">Contacts</div>
+              </div>
+            </div>
+            <div className="float-card card-3 animate-fadeInUp" style={{ animationDelay: '400ms' }}>
+              <div className="mini-chart">
+                <MessageSquare size={24} color="#8b5cf6" />
+              </div>
+              <div className="mini-text">
+                <div className="mini-value">89</div>
+                <div className="mini-label">Messages</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="features-section">
+        <div className="section-header">
+          <h2 className="section-title">Fonctionnalités Complètes</h2>
+          <p className="section-subtitle">Tout ce dont vous avez besoin pour gérer vos relations clients efficacement</p>
+        </div>
+
+        <div className="features-grid">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className="feature-card animate-fadeInUp"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="feature-icon" style={{ background: feature.gradient }}>
+                <feature.icon size={28} />
+              </div>
+              <h3 className="feature-title">{feature.title}</h3>
+              <p className="feature-description">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="benefits-section">
+        <div className="benefits-container">
+          <div className="benefits-content">
+            <h2 className="benefits-title">Pourquoi choisir Prism CRM?</h2>
+            <p className="benefits-subtitle">
+              Une solution complète pensée pour votre productivité
+            </p>
+
+            <div className="benefits-list">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="benefit-item animate-fadeInUp" style={{ animationDelay: `${index * 50}ms` }}>
+                  <CheckCircle2 size={20} className="benefit-icon" />
+                  <span>{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              className="btn-benefits"
+              onClick={() => navigate('/crm')}
+            >
+              Commencer gratuitement
+              <ArrowRight size={18} />
+            </button>
+          </div>
+
+          <div className="benefits-visual">
+            <div className="benefits-glow" />
+            <div className="benefits-mockup">
+              <div className="mockup-header">
+                <div className="mockup-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+              <div className="mockup-content">
+                <div className="mockup-sidebar"></div>
+                <div className="mockup-main">
+                  <div className="mockup-line"></div>
+                  <div className="mockup-line short"></div>
+                  <div className="mockup-grid">
+                    <div className="mockup-box"></div>
+                    <div className="mockup-box"></div>
+                    <div className="mockup-box"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Final */}
+      <section className="cta-section">
+        <div className="cta-container">
+          <h2 className="cta-title">Prêt à transformer votre gestion client?</h2>
+          <p className="cta-subtitle">Rejoignez des milliers d'entreprises qui font confiance à Prism CRM</p>
+
+          <div className="cta-buttons">
+            <button
+              className="btn-cta-primary"
+              onClick={() => navigate('/crm')}
+            >
+              Démarrer maintenant
+              <ArrowRight size={20} />
+            </button>
+            <button
+              className="btn-cta-secondary"
+              onClick={() => navigate('/contact')}
+            >
+              Nous contacter
+            </button>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
