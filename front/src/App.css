@@ -5509,113 +5509,160 @@ table {
     border-radius: 16px 16px 0 0;
   }
 }
-/* ===== REACT QUILL EDITOR STYLES ===== */
-.ql-toolbar.ql-snow {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 8px 8px 0 0 !important;
-  padding: 8px !important;
+
+/* ===== TIPTAP EDITOR STYLES ===== */
+.tiptap-editor-wrapper {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.ql-container.ql-snow {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-top: none !important;
-  border-radius: 0 0 8px 8px !important;
-  color: #e5e7eb !important;
-  font-size: 14px !important;
-  min-height: 250px !important;
+.tiptap-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
 }
 
-.ql-editor {
-  min-height: 250px !important;
-  color: #e5e7eb !important;
+.tiptap-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.ql-editor.ql-blank::before {
-  color: rgba(255, 255, 255, 0.4) !important;
-  font-style: normal !important;
+.tiptap-toolbar button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
-.ql-snow .ql-stroke {
-  stroke: rgba(255, 255, 255, 0.7) !important;
+.tiptap-toolbar button.is-active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
 }
 
-.ql-snow .ql-fill {
-  fill: rgba(255, 255, 255, 0.7) !important;
+.tiptap-separator {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px 4px;
 }
 
-.ql-snow .ql-picker-label {
-  color: rgba(255, 255, 255, 0.7) !important;
+.tiptap-content {
+  min-height: 250px;
 }
 
-.ql-snow .ql-picker-options {
-  background: #1a1a24 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+.ProseMirror {
+  padding: 16px;
+  min-height: 250px;
+  color: #e5e7eb;
+  outline: none;
 }
 
-.ql-snow .ql-picker-item {
-  color: rgba(255, 255, 255, 0.7) !important;
+.ProseMirror p {
+  margin: 0 0 8px 0;
 }
 
-.ql-snow .ql-picker-item:hover {
-  background: rgba(59, 130, 246, 0.2) !important;
-  color: #3b82f6 !important;
+.ProseMirror p:last-child {
+  margin-bottom: 0;
 }
 
-.ql-toolbar button:hover .ql-stroke,
-.ql-toolbar button:focus .ql-stroke,
-.ql-toolbar button.ql-active .ql-stroke {
-  stroke: #3b82f6 !important;
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3 {
+  margin: 16px 0 8px 0;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
-.ql-toolbar button:hover .ql-fill,
-.ql-toolbar button:focus .ql-fill,
-.ql-toolbar button.ql-active .ql-fill {
-  fill: #3b82f6 !important;
+.ProseMirror h1:first-child,
+.ProseMirror h2:first-child,
+.ProseMirror h3:first-child {
+  margin-top: 0;
 }
 
-.ql-snow.ql-toolbar button:hover,
-.ql-snow .ql-toolbar button:hover,
-.ql-snow.ql-toolbar button:focus,
-.ql-snow .ql-toolbar button:focus,
-.ql-snow.ql-toolbar button.ql-active,
-.ql-snow .ql-toolbar button.ql-active {
-  background: rgba(59, 130, 246, 0.1) !important;
-  border-radius: 4px !important;
+.ProseMirror h1 {
+  font-size: 2em;
 }
 
-.ql-snow a {
-  color: #3b82f6 !important;
+.ProseMirror h2 {
+  font-size: 1.5em;
 }
 
-/* Tooltip styles */
-.ql-tooltip {
-  background: #1a1a24 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #e5e7eb !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+.ProseMirror h3 {
+  font-size: 1.25em;
 }
 
-.ql-tooltip input {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #e5e7eb !important;
-  padding: 8px !important;
-  border-radius: 4px !important;
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 24px;
+  margin: 8px 0;
 }
 
-.ql-tooltip .ql-preview {
-  color: #3b82f6 !important;
+.ProseMirror li {
+  margin: 4px 0;
 }
 
-.ql-tooltip .ql-action::after,
-.ql-tooltip .ql-remove::before {
-  color: #e5e7eb !important;
+.ProseMirror a {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-/* Color picker */
-.ql-color-picker .ql-picker-label svg,
-.ql-icon-picker .ql-picker-label svg {
-  right: 4px !important;
+.ProseMirror a:hover {
+  color: #60a5fa;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.ProseMirror strong {
+  font-weight: 600;
+}
+
+.ProseMirror em {
+  font-style: italic;
+}
+
+.ProseMirror u {
+  text-decoration: underline;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: rgba(255, 255, 255, 0.4);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Text alignment */
+.ProseMirror [data-text-align="left"] {
+  text-align: left;
+}
+
+.ProseMirror [data-text-align="center"] {
+  text-align: center;
+}
+
+.ProseMirror [data-text-align="right"] {
+  text-align: right;
+}
+
+.ProseMirror [data-text-align="justify"] {
+  text-align: justify;
 }
