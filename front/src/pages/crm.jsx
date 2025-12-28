@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw, Settings, Send, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw, Settings, Send, X, TrendingUp, FileText, MessageSquare } from 'lucide-react';
 import Dashboard from './Dashboard';
 import EmailComposer from '../components/EmailComposer';
 import EmailHistory from '../components/EmailHistory';
@@ -2386,7 +2386,7 @@ export function CRM({ onLogin, onLogout }) {
                               </button>
                               <button
                                 onClick={() => {
-                                  if (confirm('Supprimer cette interaction ?')) {
+                                  if (window.confirm('Supprimer cette interaction ?')) {
                                     // TODO: implement delete
                                   }
                                 }}
