@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Plus, Trash2, Edit2, Search, Download, Users, Crown, UserPlus, LogOut, Shield, RefreshCw, Settings, Send, X, TrendingUp, FileText, MessageSquare } from 'lucide-react';
 import Dashboard from './Dashboard';
@@ -2445,7 +2446,7 @@ export function CRM({ onLogin, onLogout }) {
         />
 
         {/* Contact Detail Modal with Email History */}
-        {showContactDetail && detailContact && (
+        {showContactDetail && detailContact && ReactDOM.createPortal(
           <div className="email-composer-overlay" onClick={handleCloseContactDetail}>
             <div className="email-composer-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
               {/* Header */}
@@ -2532,7 +2533,8 @@ export function CRM({ onLogin, onLogout }) {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
     </Layout>
   );

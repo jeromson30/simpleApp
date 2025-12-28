@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { X, Send, FileText, Sparkles, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Image as ImageIcon, Smile } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -451,8 +452,9 @@ const EmailComposer = ({
           },
         }}
       />
-      <div className="email-composer-overlay animate-fade-in" onClick={handleClose}>
-        <div className="email-composer-modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {ReactDOM.createPortal(
+        <div className="email-composer-overlay animate-fade-in" onClick={handleClose}>
+          <div className="email-composer-modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <div className="email-composer-header">
           <div>
             <h2 className="email-composer-title">
@@ -600,8 +602,10 @@ const EmailComposer = ({
             )}
           </button>
         </div>
-      </div>
-    </div>
+        </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 };
