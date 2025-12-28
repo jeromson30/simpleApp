@@ -4191,7 +4191,7 @@ main, nav, footer, .banner {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1100;
   padding: 2rem;
   animation: fadeIn 0.2s ease;
 }
@@ -5167,7 +5167,7 @@ table {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1100;
   padding: 1rem;
   animation: fadeIn 0.2s ease;
 }
