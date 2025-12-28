@@ -1,13 +1,138 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, FileText, Sparkles, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Image as ImageIcon, Palette } from 'lucide-react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import TextAlign from '@tiptap/extension-text-align';
-import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
-import Underline from '@tiptap/extension-underline';
-import TextStyle from '@tiptap/extension-text-style';
-import Color from '@tiptap/extension-color';
+import { X, Send, FileText, Sparkles, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon } from 'lucide-react';
+import { LexicalComposer } from '@lexical/react/LexicalComposer';
+import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
+import { ContentEditable } from '@lexical/react/LexicalContentEditable';
+import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
+import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
+import { HeadingNode, QuoteNode } from '@lexical/rich-text';
+import { ListItemNode, ListNode } from '@lexical/list';
+import { LinkNode, AutoLinkNode } from '@lexical/link';
+import { $getRoot, $getSelection, FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND } from 'lexical';
+import { $generateHtmlFromNodes } from '@lexical/html';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
+import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
+import { INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND } from '@lexical/list';
+import { TOGGLE_LINK_COMMAND } from '@lexical/link';
+
+// Configuration de l'éditeur Lexical
+const editorConfig = {
+  namespace: 'EmailComposer',
+  theme: {
+    text: {
+      bold: 'editor-text-bold',
+      italic: 'editor-text-italic',
+      underline: 'editor-text-underline',
+    },
+    paragraph: 'editor-paragraph',
+    heading: {
+      h1: 'editor-heading-h1',
+      h2: 'editor-heading-h2',
+      h3: 'editor-heading-h3',
+    },
+    list: {
+      ul: 'editor-list-ul',
+      ol: 'editor-list-ol',
+      listitem: 'editor-listitem',
+    },
+    link: 'editor-link',
+  },
+  nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode],
+  onError: (error) => {
+    console.error(error);
+  },
+};
+
+// Toolbar Component
+function ToolbarPlugin() {
+  const [editor] = useLexicalComposerContext();
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+
+  const insertLink = () => {
+    const url = prompt('Enter URL:');
+    if (url) {
+      editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
+    }
+  };
+
+  return (
+    <div className="lexical-toolbar">
+      <button
+        type="button"
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')}
+        className={isBold ? 'is-active' : ''}
+        title="Gras"
+      >
+        <Bold size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')}
+        className={isItalic ? 'is-active' : ''}
+        title="Italique"
+      >
+        <Italic size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')}
+        className={isUnderline ? 'is-active' : ''}
+        title="Souligné"
+      >
+        <Underline size={16} />
+      </button>
+      <div className="toolbar-separator"></div>
+      <button
+        type="button"
+        onClick={() => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND)}
+        title="Liste à puces"
+      >
+        <List size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND)}
+        title="Liste numérotée"
+      >
+        <ListOrdered size={16} />
+      </button>
+      <div className="toolbar-separator"></div>
+      <button
+        type="button"
+        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left')}
+        title="Aligner à gauche"
+      >
+        <AlignLeft size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center')}
+        title="Centrer"
+      >
+        <AlignCenter size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right')}
+        title="Aligner à droite"
+      >
+        <AlignRight size={16} />
+      </button>
+      <div className="toolbar-separator"></div>
+      <button
+        type="button"
+        onClick={insertLink}
+        title="Insérer un lien"
+      >
+        <LinkIcon size={16} />
+      </button>
+    </div>
+  );
+}
 
 const EmailComposer = ({
   isOpen,
@@ -27,39 +152,11 @@ const EmailComposer = ({
   });
   const [loading, setLoading] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
-
-  // Configuration de l'éditeur Tiptap
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextStyle,
-      Color,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Link.configure({
-        openOnClick: false,
-      }),
-      Image,
-    ],
-    content: emailData.body,
-    onUpdate: ({ editor }) => {
-      setEmailData(prev => ({ ...prev, body: editor.getHTML() }));
-    },
-  });
-
-  // Mettre à jour l'éditeur quand emailData.body change (pour les templates)
-  useEffect(() => {
-    if (editor && emailData.body !== editor.getHTML()) {
-      editor.commands.setContent(emailData.body);
-    }
-  }, [emailData.body, editor]);
+  const [editorKey, setEditorKey] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
       loadTemplates();
-      // Pre-fill with contact data if available
       if (contact) {
         setEmailData(prev => ({
           ...prev,
@@ -90,7 +187,6 @@ const EmailComposer = ({
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
 
-    // Replace variables in template (using {{variable}} syntax)
     let subject = template.subject;
     let body = template.body;
 
@@ -113,6 +209,16 @@ const EmailComposer = ({
       subject,
       body
     }));
+
+    // Force re-render of editor with new content
+    setEditorKey(prev => prev + 1);
+  };
+
+  const handleEditorChange = (editorState, editor) => {
+    editorState.read(() => {
+      const htmlString = $generateHtmlFromNodes(editor, null);
+      setEmailData(prev => ({ ...prev, body: htmlString }));
+    });
   };
 
   const handleSend = async () => {
@@ -163,6 +269,7 @@ const EmailComposer = ({
       body: ''
     });
     setSelectedTemplate(null);
+    setEditorKey(prev => prev + 1);
     onClose();
   };
 
@@ -171,7 +278,6 @@ const EmailComposer = ({
   return (
     <div className="email-composer-overlay" onClick={handleClose}>
       <div className="email-composer-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
         <div className="email-composer-header">
           <div>
             <h2 className="email-composer-title">
@@ -189,7 +295,6 @@ const EmailComposer = ({
           </button>
         </div>
 
-        {/* Body */}
         <div className="email-composer-body">
           {/* Templates selector */}
           <div className="email-form-group">
@@ -260,118 +365,25 @@ const EmailComposer = ({
             />
           </div>
 
-          {/* Body */}
+          {/* Body - Lexical Editor */}
           <div className="email-form-group">
             <label className="email-form-label">Message *</label>
-            {editor && (
-              <div className="tiptap-editor-wrapper">
-                {/* Toolbar */}
-                <div className="tiptap-toolbar">
-                  <button
-                    type="button"
-                    onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={editor.isActive('bold') ? 'is-active' : ''}
-                    title="Gras"
-                  >
-                    <Bold size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={editor.isActive('italic') ? 'is-active' : ''}
-                    title="Italique"
-                  >
-                    <Italic size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => editor.chain().focus().toggleUnderline().run()}
-                    className={editor.isActive('underline') ? 'is-active' : ''}
-                    title="Souligné"
-                  >
-                    <Underline size={16} />
-                  </button>
-                  <div className="tiptap-separator"></div>
-                  <button
-                    type="button"
-                    onClick={() => editor.chain().focus().toggleBulletList().run()}
-                    className={editor.isActive('bulletList') ? 'is-active' : ''}
-                    title="Liste à puces"
-                  >
-                    <List size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                    className={editor.isActive('orderedList') ? 'is-active' : ''}
-                    title="Liste numérotée"
-                  >
-                    <ListOrdered size={16} />
-                  </button>
-                  <div className="tiptap-separator"></div>
-                  <button
-                    type="button"
-                    onClick={() => editor.chain().focus().setTextAlign('left').run()}
-                    className={editor.isActive({ textAlign: 'left' }) ? 'is-active' : ''}
-                    title="Aligner à gauche"
-                  >
-                    <AlignLeft size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => editor.chain().focus().setTextAlign('center').run()}
-                    className={editor.isActive({ textAlign: 'center' }) ? 'is-active' : ''}
-                    title="Centrer"
-                  >
-                    <AlignCenter size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => editor.chain().focus().setTextAlign('right').run()}
-                    className={editor.isActive({ textAlign: 'right' }) ? 'is-active' : ''}
-                    title="Aligner à droite"
-                  >
-                    <AlignRight size={16} />
-                  </button>
-                  <div className="tiptap-separator"></div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const url = window.prompt('URL du lien:');
-                      if (url) {
-                        editor.chain().focus().setLink({ href: url }).run();
-                      }
-                    }}
-                    className={editor.isActive('link') ? 'is-active' : ''}
-                    title="Insérer un lien"
-                  >
-                    <LinkIcon size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const url = window.prompt('URL de l\'image:');
-                      if (url) {
-                        editor.chain().focus().setImage({ src: url }).run();
-                      }
-                    }}
-                    title="Insérer une image"
-                  >
-                    <ImageIcon size={16} />
-                  </button>
-                  <div className="tiptap-separator"></div>
-                  <input
-                    type="color"
-                    onInput={(e) => editor.chain().focus().setColor(e.target.value).run()}
-                    value={editor.getAttributes('textStyle').color || '#ffffff'}
-                    title="Couleur du texte"
-                    style={{ width: '30px', height: '30px', border: 'none', cursor: 'pointer' }}
+            <div className="lexical-editor-wrapper">
+              <LexicalComposer key={editorKey} initialConfig={editorConfig}>
+                <ToolbarPlugin />
+                <div className="lexical-editor-container">
+                  <RichTextPlugin
+                    contentEditable={<ContentEditable className="lexical-content-editable" />}
+                    placeholder={<div className="lexical-placeholder">Rédigez votre message...</div>}
+                    ErrorBoundary={LexicalErrorBoundary}
                   />
+                  <OnChangePlugin onChange={handleEditorChange} />
+                  <HistoryPlugin />
+                  <ListPlugin />
+                  <LinkPlugin />
                 </div>
-                {/* Editor */}
-                <EditorContent editor={editor} className="tiptap-content" />
-              </div>
-            )}
+              </LexicalComposer>
+            </div>
           </div>
 
           {/* Variables helper */}
@@ -389,7 +401,6 @@ const EmailComposer = ({
           )}
         </div>
 
-        {/* Footer */}
         <div className="email-composer-footer">
           <button
             onClick={handleClose}
