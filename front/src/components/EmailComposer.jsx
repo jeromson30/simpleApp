@@ -165,7 +165,8 @@ const EmailComposer = ({
               className="email-form-select"
               value={selectedTemplate?.id || ''}
               onChange={(e) => {
-                const template = templates.find(t => t.id === e.target.value);
+                const templateId = parseInt(e.target.value);
+                const template = templates.find(t => t.id === templateId);
                 if (template) handleTemplateSelect(template);
               }}
               disabled={loadingTemplates}
