@@ -1743,39 +1743,88 @@ export function CRM({ onLogin, onLogout }) {
                     setShowForm(!showForm); setEditingId(null);
                     setFormData({ name: '', email: '', phone: '', company: '', status: 'prospect', notes: '' });
                   }}
-                    className="crm-button-add"><Plus size={18} /> <span>Ajouter</span></button>
+                    className="crm-button-add"><Plus size={18} /> <span>Nouveau</span></button>
                   <button onClick={exportToPDF} className="crm-button-export"><Download size={18} /> <span>Export</span></button>
                 </div>
               </div>
             </div>
 
-            <div className="crm-contacts-list">
-              {filteredContacts.length > 0 ? filteredContacts.map(contact => (
-                <div key={contact.id} className="crm-contact-card">
-                  <div className="crm-contact-header">
-                    <div className="crm-contact-info" onClick={() => setSelectedContact(contact)} style={{ cursor: 'pointer', flex: 1 }}>
-                      <h3>{contact.name}</h3>
-                      <p className="crm-contact-company">{contact.company || 'Sans entreprise'}</p>
-                    </div>
-                    <span className={`crm-status-badge crm-status-${contact.status}`}>{contact.status}</span>
+            <div className="crm-table-container">
+              {filteredContacts.length > 0 ? (
+                <table className="crm-table">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Entreprise</th>
+                      <th>Email</th>
+                      <th>Téléphone</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredContacts.map(contact => (
+                      <tr key={contact.id}>
+                        <td>
+                          <span className="cell-name" onClick={() => setSelectedContact(contact)}>
+                            {contact.name}
+                          </span>
+                        </td>
+                        <td className="cell-company">{contact.company || '—'}</td>
+                        <td className="cell-email">{contact.email}</td>
+                        <td className="cell-phone">{contact.phone || '—'}</td>
+                        <td>
+                          <span className={`status-pill ${contact.status}`}>
+                            {contact.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              onClick={() => handleOpenEmailComposer(contact)}
+                              className="table-action-btn success"
+                              title="Envoyer email"
+                            >
+                              <Send size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleOpenContactDetail(contact)}
+                              className="table-action-btn"
+                              title="Détails"
+                            >
+                              <Users size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(contact)}
+                              className="table-action-btn"
+                              title="Modifier"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(contact.id)}
+                              className="table-action-btn danger"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-state-icon">
+                    <Users size={64} />
                   </div>
-                  <div className="crm-contact-details">
-                    <p>📧 {contact.email}</p>
-                    {contact.phone && <p>📱 {contact.phone}</p>}
-                  </div>
-                  {contact.notes && <p className="crm-contact-notes">📝 {contact.notes}</p>}
-                  <div className="crm-contact-actions">
-                    <button onClick={() => handleOpenEmailComposer(contact)} className="crm-btn-edit" style={{ background: '#10b981' }}>
-                      <Send size={16} /> Envoyer email
-                    </button>
-                    <button onClick={() => handleOpenContactDetail(contact)} className="crm-btn-edit" style={{ background: '#8b5cf6' }}>
-                      <Users size={16} /> Détails
-                    </button>
-                    <button onClick={() => handleEdit(contact)} className="crm-btn-edit"><Edit2 size={16} /> Modifier</button>
-                    <button onClick={() => handleDelete(contact.id)} className="crm-btn-delete"><Trash2 size={16} /> Supprimer</button>
+                  <div className="empty-state-title">Aucun contact trouvé</div>
+                  <div className="empty-state-description">
+                    Commencez par ajouter votre premier contact
                   </div>
                 </div>
-              )) : <p className="crm-empty-message">Aucun contact trouvé</p>}
+              )}
             </div>
           </>
           } />
@@ -1978,13 +2027,12 @@ export function CRM({ onLogin, onLogout }) {
             )}
 
             {/* Filters */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div className="filter-bar">
               {['all', 'draft', 'sent', 'accepted', 'rejected', 'expired'].map(status => (
                 <button
                   key={status}
                   onClick={() => setQuoteFilter(status)}
-                  className={`crm-tab-button ${quoteFilter === status ? 'active' : ''}`}
-                  style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                  className={`filter-pill ${quoteFilter === status ? 'active' : ''}`}
                 >
                   {status === 'all' ? 'Tous' :
                    status === 'draft' ? 'Brouillon' :
@@ -1995,71 +2043,95 @@ export function CRM({ onLogin, onLogout }) {
               ))}
             </div>
 
-            {/* Quotes List */}
-            <div className="crm-contacts-list">
-              {quotes
-                .filter(q => quoteFilter === 'all' || q.status === quoteFilter)
-                .map(quote => (
-                <div key={quote.id} className="crm-contact-card">
-                  <div className="crm-contact-header">
-                    <div className="crm-contact-info" style={{ flex: 1 }}>
-                      <h3>{quote.quote_number}</h3>
-                      <p className="crm-contact-company">{quote.client_name}</p>
-                      {quote.client_email && <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>📧 {quote.client_email}</p>}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
-                      <span className={`crm-status-badge crm-status-${quote.status}`}>
-                        {quote.status === 'draft' ? 'Brouillon' :
-                         quote.status === 'sent' ? 'Envoyé' :
-                         quote.status === 'accepted' ? 'Accepté' :
-                         quote.status === 'rejected' ? 'Refusé' : 'Expiré'}
-                      </span>
-                      <select
-                        value={quote.status}
-                        onChange={(e) => handleChangeQuoteStatus(quote.id, e.target.value)}
-                        className="crm-role-select"
-                        style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                      >
-                        <option value="draft">Brouillon</option>
-                        <option value="sent">Envoyé</option>
-                        <option value="accepted">Accepté</option>
-                        <option value="rejected">Refusé</option>
-                        <option value="expired">Expiré</option>
-                      </select>
-                    </div>
+            {/* Quotes Table */}
+            <div className="crm-table-container">
+              {quotes.filter(q => quoteFilter === 'all' || q.status === quoteFilter).length > 0 ? (
+                <table className="crm-table">
+                  <thead>
+                    <tr>
+                      <th>N° Devis</th>
+                      <th>Client</th>
+                      <th>Email</th>
+                      <th>Montant TTC</th>
+                      <th>Articles</th>
+                      <th>Validité</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {quotes
+                      .filter(q => quoteFilter === 'all' || q.status === quoteFilter)
+                      .map(quote => (
+                      <tr key={quote.id}>
+                        <td className="cell-name">{quote.quote_number}</td>
+                        <td>{quote.client_name}</td>
+                        <td className="cell-email">{quote.client_email || '—'}</td>
+                        <td className="cell-amount">{quote.total.toFixed(2)}€</td>
+                        <td className="cell-company">{quote.items?.length || 0}</td>
+                        <td className="cell-date">
+                          {quote.valid_until
+                            ? new Date(quote.valid_until).toLocaleDateString('fr-FR')
+                            : '—'}
+                        </td>
+                        <td>
+                          <select
+                            value={quote.status}
+                            onChange={(e) => handleChangeQuoteStatus(quote.id, e.target.value)}
+                            className={`status-pill ${quote.status}`}
+                            style={{
+                              cursor: 'pointer',
+                              border: 'none',
+                              fontWeight: 600,
+                              fontSize: '0.75rem'
+                            }}
+                          >
+                            <option value="draft">Brouillon</option>
+                            <option value="sent">Envoyé</option>
+                            <option value="accepted">Accepté</option>
+                            <option value="rejected">Refusé</option>
+                            <option value="expired">Expiré</option>
+                          </select>
+                        </td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              onClick={() => generateQuotePDF(quote)}
+                              className="table-action-btn success"
+                              title="Télécharger PDF"
+                            >
+                              <Download size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleEditQuote(quote)}
+                              className="table-action-btn"
+                              title="Modifier"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteQuote(quote.id)}
+                              className="table-action-btn danger"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-state-icon">
+                    <FileText size={64} />
                   </div>
-
-                  <div className="crm-contact-details">
-                    <p style={{ fontSize: '1.25rem', fontWeight: '600', color: '#64c8ff' }}>
-                      💰 {quote.total.toFixed(2)}€ TTC
-                    </p>
-                    <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
-                      {quote.items?.length || 0} article{(quote.items?.length || 0) > 1 ? 's' : ''}
-                    </p>
-                    {quote.valid_until && (
-                      <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
-                        📅 Valide jusqu'au {new Date(quote.valid_until).toLocaleDateString('fr-FR')}
-                      </p>
-                    )}
-                  </div>
-
-                  {quote.notes && <p className="crm-contact-notes">📝 {quote.notes}</p>}
-
-                  <div className="crm-contact-actions">
-                    <button onClick={() => generateQuotePDF(quote)} className="crm-btn-edit" style={{ background: '#10b981' }}>
-                      <Download size={16} /> PDF
-                    </button>
-                    <button onClick={() => handleEditQuote(quote)} className="crm-btn-edit">
-                      <Edit2 size={16} /> Modifier
-                    </button>
-                    <button onClick={() => handleDeleteQuote(quote.id)} className="crm-btn-delete">
-                      <Trash2 size={16} /> Supprimer
-                    </button>
+                  <div className="empty-state-title">Aucun devis trouvé</div>
+                  <div className="empty-state-description">
+                    Créez votre premier devis pour commencer
                   </div>
                 </div>
-              ))}
-              {quotes.filter(q => quoteFilter === 'all' || q.status === quoteFilter).length === 0 && (
-                <p className="crm-empty-message">Aucun devis trouvé</p>
               )}
             </div>
 

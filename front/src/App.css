@@ -9003,3 +9003,513 @@ table {
 }
 
 /* Toolbar is now relative positioned and doesn't need sidebar collapse adjustments */
+
+/* ========================================
+   SALESFORCE-STYLE CRM TABLE SYSTEM
+   Professional, Clean, Data-Dense Design
+   ======================================== */
+
+/* CRM Container */
+.crm-container {
+  max-width: 100%;
+  background: transparent;
+  animation: fadeIn 400ms ease;
+}
+
+/* Table Container */
+.crm-table-container {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Modern Table */
+.crm-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+
+/* Table Header */
+.crm-table thead {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.crm-table th {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.crm-table th:first-child {
+  padding-left: 1.5rem;
+}
+
+.crm-table th:last-child {
+  padding-right: 1.5rem;
+}
+
+/* Table Body */
+.crm-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 200ms ease;
+}
+
+.crm-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.crm-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.crm-table td {
+  padding: 0.875rem 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  vertical-align: middle;
+}
+
+.crm-table td:first-child {
+  padding-left: 1.5rem;
+}
+
+.crm-table td:last-child {
+  padding-right: 1.5rem;
+}
+
+/* Cell Types */
+.cell-name {
+  font-weight: 600;
+  color: white;
+  font-size: 0.938rem;
+}
+
+.cell-name:hover {
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.cell-company {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cell-email {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 0.813rem;
+}
+
+.cell-phone {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 0.813rem;
+}
+
+.cell-date {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.813rem;
+}
+
+.cell-amount {
+  font-weight: 600;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  color: var(--success);
+  font-size: 0.938rem;
+}
+
+/* Status Pills (Salesforce-style) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-pill.prospect {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.status-pill.client {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-pill.perdu,
+.status-pill.lost {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-pill.draft {
+  background: rgba(100, 116, 139, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.status-pill.sent {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.status-pill.accepted {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-pill.rejected,
+.status-pill.expired {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Action Buttons Row */
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.crm-table tbody tr:hover .table-actions {
+  opacity: 1;
+}
+
+.table-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.table-action-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--brand-primary);
+  transform: scale(1.05);
+}
+
+.table-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+}
+
+.table-action-btn.success:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--success);
+}
+
+/* List View Header */
+.list-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.list-view-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.list-view-count {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: 0.75rem;
+  font-weight: 400;
+}
+
+.list-view-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Filter Bar (Salesforce-style) */
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.813rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.filter-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.filter-pill.active {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* Compact Button */
+.btn-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  border: none;
+  outline: none;
+  white-space: nowrap;
+}
+
+.btn-compact.primary {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: white;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+.btn-compact.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+.btn-compact.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-compact.secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.empty-state-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-description {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 1.5rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Responsive Table */
+@media (max-width: 1024px) {
+  .crm-table {
+    font-size: 0.813rem;
+  }
+
+  .crm-table th,
+  .crm-table td {
+    padding: 0.75rem 1rem;
+  }
+
+  .list-view-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .list-view-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Stack table on mobile */
+  .crm-table-container {
+    border-radius: 8px;
+  }
+
+  .crm-table thead {
+    display: none;
+  }
+
+  .crm-table,
+  .crm-table tbody,
+  .crm-table tr,
+  .crm-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .crm-table tr {
+    background: rgba(30, 41, 59, 0.4);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .crm-table td {
+    padding: 0.5rem 0;
+    text-align: left;
+    border: none;
+  }
+
+  .crm-table td:first-child {
+    padding-left: 0;
+  }
+
+  .crm-table td:last-child {
+    padding-right: 0;
+  }
+
+  .crm-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+  }
+
+  .table-actions {
+    opacity: 1;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Inline Edit Mode */
+.cell-editable {
+  cursor: text;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  transition: all 150ms ease;
+}
+
+.cell-editable:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cell-editing input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--brand-primary);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  color: white;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.cell-editing input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
