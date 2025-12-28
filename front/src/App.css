@@ -4876,12 +4876,18 @@ table {
   background: white;
   border-radius: 16px;
   width: 100%;
-  max-width: 700px;
+  max-width: 900px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .email-composer-modal {
+    max-width: 95%;
+  }
 }
 
 .email-composer-header {
@@ -5567,7 +5573,7 @@ table {
 
 .lexical-content-editable {
   padding: 16px;
-  min-height: 250px;
+  min-height: 350px;
   color: #f3f4f6;
   outline: none;
   font-size: 14px;
@@ -5669,4 +5675,19 @@ table {
 
 [style*="text-align: justify"] {
   text-align: justify;
+}
+
+/* Images dans l'éditeur */
+.lexical-content-editable img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 8px 0;
+  cursor: pointer;
+}
+
+/* Emoji picker dans la toolbar */
+.EmojiPickerReact {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
