@@ -1729,6 +1729,26 @@ export function CRM({ onLogin, onLogout }) {
               </div>
             )}
 
+            <div className="crm-toolbar">
+              <div className="crm-toolbar-content">
+                <div className="crm-search-container">
+                  <div className="crm-search-wrapper">
+                    <input type="text" placeholder="Rechercher..." value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)} className="crm-search-input" />
+                    <Search size={18} className="crm-search-icon" />
+                  </div>
+                </div>
+                <div className="crm-action-buttons">
+                  <button onClick={() => {
+                    setShowForm(!showForm); setEditingId(null);
+                    setFormData({ name: '', email: '', phone: '', company: '', status: 'prospect', notes: '' });
+                  }}
+                    className="crm-button-add"><Plus size={18} /> <span>Ajouter</span></button>
+                  <button onClick={exportToPDF} className="crm-button-export"><Download size={18} /> <span>Export</span></button>
+                </div>
+              </div>
+            </div>
+
             <div className="crm-contacts-list">
               {filteredContacts.length > 0 ? filteredContacts.map(contact => (
                 <div key={contact.id} className="crm-contact-card">
@@ -1756,26 +1776,6 @@ export function CRM({ onLogin, onLogout }) {
                   </div>
                 </div>
               )) : <p className="crm-empty-message">Aucun contact trouvé</p>}
-            </div>
-
-            <div className="crm-toolbar">
-              <div className="crm-toolbar-content">
-                <div className="crm-search-container">
-                  <div className="crm-search-wrapper">
-                    <input type="text" placeholder="Rechercher..." value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)} className="crm-search-input" />
-                    <Search size={18} className="crm-search-icon" />
-                  </div>
-                </div>
-                <div className="crm-action-buttons">
-                  <button onClick={() => {
-                    setShowForm(!showForm); setEditingId(null);
-                    setFormData({ name: '', email: '', phone: '', company: '', status: 'prospect', notes: '' });
-                  }}
-                    className="crm-button-add"><Plus size={18} /> <span>Ajouter</span></button>
-                  <button onClick={exportToPDF} className="crm-button-export"><Download size={18} /> <span>Export</span></button>
-                </div>
-              </div>
             </div>
           </>
           } />
