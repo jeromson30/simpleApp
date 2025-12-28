@@ -9189,13 +9189,11 @@ table {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  opacity: 0;
-  transition: opacity 200ms ease;
+  opacity: 1;
+  transition: all 200ms ease;
 }
 
-.crm-table tbody tr:hover .table-actions {
-  opacity: 1;
-}
+/* Actions always visible - no hover required */
 
 .table-action-btn {
   display: inline-flex;
