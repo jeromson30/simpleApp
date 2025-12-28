@@ -354,7 +354,7 @@ const EmailComposer = ({
       if (response.ok) {
         alert('Email envoyé avec succès !');
         if (onEmailSent) onEmailSent();
-        handleClose(true); // true = skip confirmation car email envoyé
+        handleClose();
       } else {
         const error = await response.json();
         alert(`Erreur: ${error.error}`);
@@ -367,18 +367,16 @@ const EmailComposer = ({
     }
   };
 
-  const handleClose = (skipConfirmation = false) => {
-    // Vérifier s'il y a du contenu non sauvegardé (sauf si on skip la confirmation)
-    if (!skipConfirmation) {
-      const hasUnsavedContent = emailData.subject.trim() || emailData.body.trim();
+  const handleClose = () => {
+    // Vérifier s'il y a du contenu non sauvegardé
+    const hasUnsavedContent = emailData.subject.trim() || emailData.body.trim();
 
-      if (hasUnsavedContent) {
-        const confirmClose = window.confirm(
-          'Vous avez du contenu non enregistré. Êtes-vous sûr de vouloir fermer sans envoyer ?'
-        );
-        if (!confirmClose) {
-          return; // Ne pas fermer
-        }
+    if (hasUnsavedContent) {
+      const confirmClose = window.confirm(
+        'Êtes-vous sûr de vouloir fermer ?'
+      );
+      if (!confirmClose) {
+        return; // Ne pas fermer
       }
     }
 
