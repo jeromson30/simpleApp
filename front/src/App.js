@@ -46,7 +46,7 @@ function AppContent() {
 
     const particles = [];
     const orbs = [];
-    const particleCount = 150;
+    const particleCount = 25;
     
     class Particle {
       constructor() {
