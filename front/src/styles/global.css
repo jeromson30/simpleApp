@@ -265,3 +265,56 @@ main, nav, footer, .banner {
   color: #9ca3af;
 }
 
+/* ===== GRID UTILITIES ===== */
+.grid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Responsive Grid */
+@media (max-width: 1024px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-cols-4,
+  .grid-cols-3,
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    gap: var(--space-4);
+  }
+}
+
+/* ===== RESPONSIVE BUTTON CONTAINERS ===== */
+@media (max-width: 640px) {
+  /* Make button groups stack vertically on mobile */
+  [style*="display: flex"][style*="gap"] {
+    flex-wrap: wrap !important;
+  }
+}
+
