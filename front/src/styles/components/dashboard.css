@@ -1136,6 +1136,20 @@
   .metric-value {
     font-size: 1.75rem;
   }
+
+  /* Dashboard header actions */
+  .dashboard-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--space-4) !important;
+  }
+
+  /* Period selector buttons - stack on mobile */
+  .btn-sm {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.75rem;
+    min-width: 48px !important;
+  }
 }
 
 @media (max-width: 480px) {
