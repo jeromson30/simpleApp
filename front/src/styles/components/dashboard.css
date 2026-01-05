@@ -1090,6 +1090,83 @@
   }
 }
 
+/* Dashboard Responsive Design */
+@media (max-width: 1200px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .admin-stat-card {
+    padding: 1.25rem;
+  }
+
+  .admin-stat-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .admin-stat-info h3 {
+    font-size: 1.5rem;
+  }
+
+  .admin-dashboard-grid {
+    gap: 1rem;
+  }
+
+  /* Modern dashboard responsive */
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .metric-card {
+    padding: 1.25rem;
+  }
+
+  .metric-value {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-stats-grid {
+    gap: 0.75rem;
+  }
+
+  .admin-stat-card {
+    padding: 1rem;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .admin-stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .admin-stat-info h3 {
+    font-size: 1.25rem;
+  }
+
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+}
+
 /* Ensure page content doesn't get hidden under fixed navbar */
 /* Only apply to public pages (home, offers, contact) not CRM */
 .home-modern,
